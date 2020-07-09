@@ -1,0 +1,80 @@
+Initialize HBCC Env
+PATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/bin/:/usr/local/jdk/jdk1.8.0_241/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LD_LIBRARY_PATH=:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/libarm32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/libarch64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/libarch64/
+PYTHONPATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/lib/python3.6/site-packages/:
+HBDK Info
+version: 3.7.10
+runtime version: 3.5.3
+cmake_build_type: releasewithassert
+supported_march: bernoulli, bernoulli2, 
+git_version: 3ca1533
+git_branch: TC3.4.0
+release_type: public
+
+hbdk-cc --march bernoulli2 -m /gpfs/plat_aidi/model/1869/IntInference/lic48-varg_v2-25-hobot-predict-kX2-final-symbol.json -p /gpfs/plat_aidi/model/1869/IntInference/lic48-varg_v2-25-hobot-predict-kX2-final-0050.params -s 1x48x128x3 -i pyramid --O2  -o plate_num.hbm
+warning: missing stride for pyramid input[0], use its aligned width by default.
+Initialize HBCC Env
+PATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/bin/:/usr/local/jdk/jdk1.8.0_241/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LD_LIBRARY_PATH=:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/libarm32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/libarch64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/libarch64/
+PYTHONPATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/lib/python3.6/site-packages/:
+HBDK Info
+version: 3.7.10
+runtime version: 3.5.3
+cmake_build_type: releasewithassert
+supported_march: bernoulli, bernoulli2, 
+git_version: 3ca1533
+git_branch: TC3.4.0
+release_type: public
+
+hbdk-cc --march bernoulli2 -m /gpfs/plat_aidi/model/1542/IntInference/det_videoStruct_v3-x2-hobot-predict-symbol.json -p /gpfs/plat_aidi/model/1542/IntInference/det_videoStruct_v3-x2-hobot-predict-0010.params -s 1x540x960x3 -i pyramid --O2 --pyramid-stride 960 -o vehicle_multitask.hbm
+info: Layer "rcnn_feat_branch0_rois" will be JUST-IN-TIME compiled by runtime.
+info: Layer "rcnn_feat_branch1_rois" will be JUST-IN-TIME compiled by runtime.
+info: Layer "rcnn_feat_branch2_rois" will be JUST-IN-TIME compiled by runtime.
+info: Layer "rcnn_feat_branch3_rois" will be JUST-IN-TIME compiled by runtime.
+info: Layer "rcnn_feat_branch4_rois" will be JUST-IN-TIME compiled by runtime.
+info: Layer "rpp_branch0" will be executed on CPU
+info: Layer "rpp_branch1" will be executed on CPU
+info: Layer "rpp_branch2" will be executed on CPU
+info: Layer "rpp_branch3" will be executed on CPU
+info: Layer "rpp_branch4" will be executed on CPU
+info: Layer "attrs_feat_rois" will be JUST-IN-TIME compiled by runtime.
+Initialize HBCC Env
+PATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/bin/:/usr/local/jdk/jdk1.8.0_241/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LD_LIBRARY_PATH=:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/libarm32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/libarch64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/libarch64/
+PYTHONPATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/lib/python3.6/site-packages/:
+HBDK Info
+version: 3.7.10
+runtime version: 3.5.3
+cmake_build_type: releasewithassert
+supported_march: bernoulli, bernoulli2, 
+git_version: 3ca1533
+git_branch: TC3.4.0
+release_type: public
+
+hbdk-cc --march bernoulli2 -m /gpfs/plat_aidi/model/1334/IntInference/vehicle_type_v2_25_s128-hobot-predict-kX2-final-symbol.json -p /gpfs/plat_aidi/model/1334/IntInference/vehicle_type_v2_25_s128-hobot-predict-kX2-final-0010.params -s 1x128x128x3 -i pyramid --O2  -o vehicle_type.hbm
+warning: missing stride for pyramid input[0], use its aligned width by default.
+warning: node[466] is ignored (does not affect any model output), op=QuantiFlatten, name=quantiflatten2_quantiflatten0
+warning: Global average pooling layer "quantipool2_fwd" has kernel size of 1x1, but input feature is 4x4, set the kernel size to feature map size.
+Initialize HBCC Env
+PATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/bin/:/usr/local/jdk/jdk1.8.0_241/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LD_LIBRARY_PATH=:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/libarm32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/libarch64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/libarch64/
+PYTHONPATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/lib/python3.6/site-packages/:
+HBDK Info
+version: 3.7.10
+runtime version: 3.5.3
+cmake_build_type: releasewithassert
+supported_march: bernoulli, bernoulli2, 
+git_version: 3ca1533
+git_branch: TC3.4.0
+release_type: public
+
+hbdk-cc --march bernoulli2 -m /gpfs/plat_aidi/model/1332/IntInference/vehicle_color_v2_025_s128-hobot-predict-kX2-final-symbol.json -p /gpfs/plat_aidi/model/1332/IntInference/vehicle_color_v2_025_s128-hobot-predict-kX2-final-0010.params -s 1x128x128x3 -i pyramid --O2  -o vehicle_color.hbm
+warning: missing stride for pyramid input[0], use its aligned width by default.
+warning: node[466] is ignored (does not affect any model output), op=QuantiFlatten, name=quantiflatten3_quantiflatten0
+warning: Global average pooling layer "quantipool3_fwd" has kernel size of 1x1, but input feature is 4x4, set the kernel size to feature map size.
+hbdk-pack /gpfs/plat_aidi/build/1326/so/plate_num.hbm /gpfs/plat_aidi/build/1326/so/vehicle_multitask.hbm /gpfs/plat_aidi/build/1326/so/vehicle_type.hbm /gpfs/plat_aidi/build/1326/so/vehicle_color.hbm -o /gpfs/plat_aidi/build/1326/so/4in1.hbm --tag vehicle_solution_v0.0.7
+hbdk-perf /gpfs/plat_aidi/build/1326/so/4in1.hbm
+  FPS=9093.31   (see plate_num.html)
+  FPS=8830.02   (see vehicle_color.html)
+  FPS=21.32   (see vehicle_multitask.html)
+  FPS=8830.02   (see vehicle_type.html)

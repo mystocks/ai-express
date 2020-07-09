@@ -1,0 +1,73 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 214796544,
+        "BPU OPs per frame (working)": 264641536,
+        "BPU OPs per run (effective)": 214796544,
+        "BPU OPs per run (working)": 264641536,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI2",
+        "BPU utilization (effective)": 0.734,
+        "BPU utilization (working)": 0.905,
+        "DDR bytes per frame": 1717984,
+        "DDR bytes per run": 1717984,
+        "DDR bytes per second": 3007085445,
+        "DDR megabytes per frame": 1.638,
+        "DDR megabytes per run": 1.638,
+        "DDR megabytes per second": 2867.8,
+        "FPS": 1750.36,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli2 -m /gpfs/plat_aidi/model/1876/IntInference/model_x2_infer-symbol.json -p /gpfs/plat_aidi/model/1876/IntInference/model_x2_infer-0088.params -s 1x128x128x3 -i resizer --O2 -o faceMask.hbm",
+        "frame per run": 1,
+        "frame per second": 1750.36,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "quanti_input_output",
+                "1x128x128x3"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.957,
+            0.985,
+            0.979,
+            0.916,
+            0.683,
+            0.648
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            510,
+            385,
+            1337,
+            4145,
+            5713,
+            3509
+        ],
+        "interval number": 6,
+        "interval storing bandwidth (megabytes/s)": [
+            0,
+            0,
+            156,
+            390,
+            234,
+            0
+        ],
+        "interval time (ms)": 0.1,
+        "latency (ms)": 0.6,
+        "latency (us)": 571.3,
+        "loaded bytes per frame": 1636032,
+        "loaded bytes per run": 1636032,
+        "model json CRC": "0952144d",
+        "model json file": "/gpfs/plat_aidi/model/1876/IntInference/model_x2_infer-symbol.json",
+        "model name": "faceMask",
+        "model param CRC": "b617995b",
+        "model param file": "/gpfs/plat_aidi/model/1876/IntInference/model_x2_infer-0088.params",
+        "run per second": 1750.36,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 81952,
+        "stored bytes per run": 81952
+    }
+}

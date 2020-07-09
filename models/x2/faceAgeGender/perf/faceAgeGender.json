@@ -1,0 +1,76 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 141902720,
+        "BPU OPs per frame (working)": 201985024,
+        "BPU OPs per run (effective)": 141902720,
+        "BPU OPs per run (working)": 201985024,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI",
+        "BPU utilization (effective)": 0.568,
+        "BPU utilization (working)": 0.808,
+        "DDR bytes per frame": 2146944,
+        "DDR bytes per run": 2146944,
+        "DDR bytes per second": 3517886263,
+        "DDR megabytes per frame": 2.047,
+        "DDR megabytes per run": 2.047,
+        "DDR megabytes per second": 3354.9,
+        "FPS": 1638.56,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli -m /gpfs/plat_aidi/model/1273/IntInference/model-absorb-bn-ft-hobot-predict-symbol.json -p /gpfs/plat_aidi/model/1273/IntInference/model-absorb-bn-ft-hobot-predict-0121.params -s 1x128x128x3 -i resizer --O2 -o faceAgeGender.hbm",
+        "frame per run": 1,
+        "frame per second": 1638.56,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "quantiinput0_output",
+                "1x128x128x3"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.942,
+            0.984,
+            0.925,
+            0.748,
+            0.656,
+            0.59,
+            0.088
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            407,
+            2349,
+            3407,
+            5043,
+            5180,
+            2947,
+            44
+        ],
+        "interval number": 7,
+        "interval storing bandwidth (megabytes/s)": [
+            0,
+            468,
+            234,
+            234,
+            156,
+            0,
+            0
+        ],
+        "interval time (ms)": 0.1,
+        "latency (ms)": 0.6,
+        "latency (us)": 610.3,
+        "loaded bytes per frame": 2032160,
+        "loaded bytes per run": 2032160,
+        "model json CRC": "d710926b",
+        "model json file": "/gpfs/plat_aidi/model/1273/IntInference/model-absorb-bn-ft-hobot-predict-symbol.json",
+        "model name": "faceAgeGender",
+        "model param CRC": "d8fd9fc8",
+        "model param file": "/gpfs/plat_aidi/model/1273/IntInference/model-absorb-bn-ft-hobot-predict-0121.params",
+        "run per second": 1638.56,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 114784,
+        "stored bytes per run": 114784
+    }
+}

@@ -1,0 +1,1 @@
+c521f2d7632d76cb478bf5d71ccc281b  vehicleType.hbm

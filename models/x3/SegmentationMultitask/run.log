@@ -1,0 +1,25 @@
+Initialize HBCC Env
+PATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/bin/:/usr/local/jdk/jdk1.8.0_241/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LD_LIBRARY_PATH=:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/libarm32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/libarch64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/libarch64/
+PYTHONPATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/lib/python3.6/site-packages/:
+HBDK Info
+version: 3.7.10
+runtime version: 3.5.3
+cmake_build_type: releasewithassert
+supported_march: bernoulli, bernoulli2, 
+git_version: 3ca1533
+git_branch: TC3.4.0
+release_type: public
+
+hbdk-cc --march bernoulli2 -m /gpfs/plat_aidi/model/2079/IntInference/segmentation_ouput_multitask_x2_infer-symbol.json -p /gpfs/plat_aidi/model/2079/IntInference/segmentation_ouput_multitask_x2_infer-0033.params -s 1x540x960x3 -i pyramid --O2  -o SegmentationMultitask.hbm
+warning: missing stride for pyramid input[0], use its aligned width by default.
+info: Layer "fasterrcnn0_rcnn0_quantiroialign0" will be JUST-IN-TIME compiled by runtime.
+info: Layer "fasterrcnn0_rcnn1_quantiroialign0" will be JUST-IN-TIME compiled by runtime.
+info: Layer "fasterrcnn0_rcnn2_quantiroialign0" will be JUST-IN-TIME compiled by runtime.
+info: Layer "fasterrcnn0_rcnn0_quantirpp0_rpp" will be executed on CPU
+info: Layer "fasterrcnn0_rcnn1_quantirpp0_rpp" will be executed on CPU
+info: Layer "fasterrcnn0_rcnn2_quantirpp0_rpp" will be executed on CPU
+info: Layer "twostagebranch0_quantiroialign0" will be JUST-IN-TIME compiled by runtime.
+hbdk-pack /gpfs/plat_aidi/build/1359/so/SegmentationMultitask.hbm -o /gpfs/plat_aidi/build/1359/so/SegmentationMultitask.hbm --tag SegmentationMultitask_v0.0.1
+hbdk-perf /gpfs/plat_aidi/build/1359/so/SegmentationMultitask.hbm
+  FPS=14.38   (see SegmentationMultitask.html)

@@ -1,0 +1,15 @@
+{
+  "auth_mode": 0,
+  "display_mode": 1,
+  "user": "admin",
+  "password": "123456",
+  "smart_type": 2,
+  "video_type": 2,
+  "image_width": 1920,
+  "image_height": 1080,
+  "layer": 0,
+  "data_buf_size": 3110400,
+  "packet_size": 102400,
+  "jpeg_quality": 50,
+  "attribute_description_path": "configs/websocketplugin_attribute.json"
+}

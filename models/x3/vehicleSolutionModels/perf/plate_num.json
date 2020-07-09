@@ -1,0 +1,73 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 30384128,
+        "BPU OPs per frame (working)": 35148800,
+        "BPU OPs per run (effective)": 30384128,
+        "BPU OPs per run (working)": 35148800,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI2",
+        "BPU utilization (effective)": 0.54,
+        "BPU utilization (working)": 0.624,
+        "DDR bytes per frame": 509600,
+        "DDR bytes per run": 509600,
+        "DDR bytes per second": 4633948950,
+        "DDR megabytes per frame": 0.486,
+        "DDR megabytes per run": 0.486,
+        "DDR megabytes per second": 4419.3,
+        "FPS": 9093.31,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli2 -m /gpfs/plat_aidi/model/1869/IntInference/lic48-varg_v2-25-hobot-predict-kX2-final-symbol.json -p /gpfs/plat_aidi/model/1869/IntInference/lic48-varg_v2-25-hobot-predict-kX2-final-0050.params -s 1x48x128x3 -i pyramid --O2 -o plate_num.hbm",
+        "frame per run": 1,
+        "frame per second": 9093.31,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "backbone2_quantiinput0_quantiinput0_output",
+                "1x48x128x3"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.513,
+            0.653,
+            0.661,
+            0.796,
+            0.563,
+            0.246
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            1350,
+            3183,
+            4077,
+            5759,
+            6827,
+            1929
+        ],
+        "interval number": 6,
+        "interval storing bandwidth (megabytes/s)": [
+            146,
+            292,
+            221,
+            266,
+            97,
+            146
+        ],
+        "interval time (ms)": 0.02,
+        "latency (ms)": 0.1,
+        "latency (us)": 110.0,
+        "loaded bytes per frame": 485024,
+        "loaded bytes per run": 485024,
+        "model json CRC": "cedde858",
+        "model json file": "/gpfs/plat_aidi/model/1869/IntInference/lic48-varg_v2-25-hobot-predict-kX2-final-symbol.json",
+        "model name": "plate_num",
+        "model param CRC": "63616c5b",
+        "model param file": "/gpfs/plat_aidi/model/1869/IntInference/lic48-varg_v2-25-hobot-predict-kX2-final-0050.params",
+        "run per second": 9093.31,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 24576,
+        "stored bytes per run": 24576
+    }
+}

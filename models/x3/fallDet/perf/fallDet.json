@@ -1,0 +1,73 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 11236352,
+        "BPU OPs per frame (working)": 56466432,
+        "BPU OPs per run (effective)": 11236352,
+        "BPU OPs per run (working)": 56466432,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI2",
+        "BPU utilization (effective)": 0.075,
+        "BPU utilization (working)": 0.377,
+        "DDR bytes per frame": 2439648,
+        "DDR bytes per run": 2439648,
+        "DDR bytes per second": 8338111350,
+        "DDR megabytes per frame": 2.327,
+        "DDR megabytes per run": 2.327,
+        "DDR megabytes per second": 7951.8,
+        "FPS": 3417.75,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli2 -m /gpfs/plat_aidi/model/1886/IntInference/act_kps_x2_infer-symbol.json -p /gpfs/plat_aidi/model/1886/IntInference/act_kps_x2_infer-0020.params -s 1x17x32x3 -i ddr --O2 -o fallDet.hbm",
+        "frame per run": 1,
+        "frame per second": 3417.75,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "input_quanti__output",
+                "1x17x32x3"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.543,
+            0.609,
+            0.369,
+            0.308,
+            0.248,
+            0.129
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            5674,
+            7589,
+            7579,
+            8898,
+            8611,
+            7540
+        ],
+        "interval number": 6,
+        "interval storing bandwidth (megabytes/s)": [
+            246,
+            78,
+            195,
+            39,
+            78,
+            0
+        ],
+        "interval time (ms)": 0.05,
+        "latency (ms)": 0.3,
+        "latency (us)": 292.6,
+        "loaded bytes per frame": 2406208,
+        "loaded bytes per run": 2406208,
+        "model json CRC": "53350888",
+        "model json file": "/gpfs/plat_aidi/model/1886/IntInference/act_kps_x2_infer-symbol.json",
+        "model name": "fallDet",
+        "model param CRC": "1ce22f2b",
+        "model param file": "/gpfs/plat_aidi/model/1886/IntInference/act_kps_x2_infer-0020.params",
+        "run per second": 3417.75,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 33440,
+        "stored bytes per run": 33440
+    }
+}

@@ -1,0 +1,18 @@
+Initialize HBCC Env
+PATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/bin/:/usr/local/jdk/jdk1.8.0_241/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/hadoop-2.7.2/bin
+LD_LIBRARY_PATH=:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/darwin/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/m2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/matrix/libarm32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2/libarch64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib32/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/lib64/:/gpfs/plat_aidi/build/hbcc/v3.7.10/hbcc/targets/x2a/libarch64/
+PYTHONPATH=/gpfs/plat_aidi/build/hbcc/v3.7.10/lib/python3.6/site-packages/:
+HBDK Info
+version: 3.7.10
+runtime version: 3.5.3
+cmake_build_type: releasewithassert
+supported_march: bernoulli, bernoulli2, 
+git_version: 3ca1533
+git_branch: TC3.4.0
+release_type: public
+
+hbdk-cc --march bernoulli -m /gpfs/plat_aidi/model/1941/IntInference/predict-vid-symbol.json -p /gpfs/plat_aidi/model/1941/IntInference/predict-vid-0001.params -s 1x8x1x256 -i ddr --O2  -o vid.hbm
+
+hbdk-pack /gpfs/plat_aidi/build/1225/so/vid.hbm -o /gpfs/plat_aidi/build/1225/so/vid.hbm --tag vid_v0.0.2
+hbdk-perf /gpfs/plat_aidi/build/1225/so/vid.hbm
+  FPS=15827.17   (see vid.html)

@@ -1,0 +1,27 @@
+{
+	"hbdk_info": {
+		"cmake_build_type": " releasewithassert",
+		"git_branch": " TC3.4.0",
+		"git_version": " 3ca1533",
+		"release_type": " public",
+		"runtime version": " 3.5.3",
+		"supported_march": " bernoulli, bernoulli2, ",
+		"version": " 3.7.10"
+	},
+	"pub_model_info": {
+		"pub_model_name": "xiaomiMultitask",
+		"pub_version": "v0.0.1",
+		"models_list": [
+			{
+				"model_name": "xiaomiMultitask",
+				"version": "v0.0.1",
+				"output_model_name": "miMultitask.hbm",
+				"hbm_md5": "8374e2a9b8539e1f9c459540a72a62f2",
+				"model_json_file": "/gpfs/plat_aidi/model/1639/IntInference/multitask_x2_infer-symbol.json",
+				"json_file_md5": "1168e4ee6ff4041095d58d9112c3b06e",
+				"model_param_file": "/gpfs/plat_aidi/model/1639/IntInference/multitask_x2_infer-0033.params",
+				"param_file_md5": "2b438351a692543066e2151e1808a5ba"
+			}
+		]
+	}
+}

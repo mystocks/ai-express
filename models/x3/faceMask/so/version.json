@@ -1,0 +1,27 @@
+{
+	"hbdk_info": {
+		"cmake_build_type": " releasewithassert",
+		"git_branch": " TC3.4.0",
+		"git_version": " 3ca1533",
+		"release_type": " public",
+		"runtime version": " 3.5.3",
+		"supported_march": " bernoulli, bernoulli2, ",
+		"version": " 3.7.10"
+	},
+	"pub_model_info": {
+		"pub_model_name": "faceMask",
+		"pub_version": "v1.0.0",
+		"models_list": [
+			{
+				"model_name": "faceMask",
+				"version": "v1.0.0",
+				"output_model_name": "faceMask.hbm",
+				"hbm_md5": "191e99aecce690f97e6c8e9022c69c1b",
+				"model_json_file": "/gpfs/plat_aidi/model/1876/IntInference/model_x2_infer-symbol.json",
+				"json_file_md5": "da514a4bd6e32c65fdb46d4619276442",
+				"model_param_file": "/gpfs/plat_aidi/model/1876/IntInference/model_x2_infer-0088.params",
+				"param_file_md5": "b50d582df1730696bb346012f308f3f8"
+			}
+		]
+	}
+}

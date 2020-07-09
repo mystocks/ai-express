@@ -1,0 +1,82 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 165625856,
+        "BPU OPs per frame (working)": 198909952,
+        "BPU OPs per run (effective)": 165625856,
+        "BPU OPs per run (working)": 198909952,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI2",
+        "BPU utilization (effective)": 0.723,
+        "BPU utilization (working)": 0.869,
+        "DDR bytes per frame": 1762304,
+        "DDR bytes per run": 1762304,
+        "DDR bytes per second": 3940627976,
+        "DDR megabytes per frame": 1.681,
+        "DDR megabytes per run": 1.681,
+        "DDR megabytes per second": 3758.1,
+        "FPS": 2236.07,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli2 -m /gpfs/plat_aidi/model/1940/IntInference/predict-backbone-symbol.json -p /gpfs/plat_aidi/model/1940/IntInference/predict-backbone-0001.params -s 1x128x128x3 -i pyramid --O2 --pyramid-stride 128 -o backBone.hbm",
+        "frame per run": 1,
+        "frame per second": 2236.07,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "input__output",
+                "1x128x128x3"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.637,
+            0.992,
+            0.963,
+            0.897,
+            0.957,
+            0.811,
+            0.93,
+            0.85,
+            0.733
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            788,
+            1850,
+            1376,
+            2265,
+            3750,
+            5741,
+            5348,
+            8331,
+            1640
+        ],
+        "interval number": 9,
+        "interval storing bandwidth (megabytes/s)": [
+            0,
+            625,
+            312,
+            312,
+            0,
+            312,
+            625,
+            312,
+            19
+        ],
+        "interval time (ms)": 0.05,
+        "latency (ms)": 0.4,
+        "latency (us)": 447.2,
+        "loaded bytes per frame": 1630208,
+        "loaded bytes per run": 1630208,
+        "model json CRC": "c1fbd1a2",
+        "model json file": "/gpfs/plat_aidi/model/1940/IntInference/predict-backbone-symbol.json",
+        "model name": "backBone",
+        "model param CRC": "87bc279f",
+        "model param file": "/gpfs/plat_aidi/model/1940/IntInference/predict-backbone-0001.params",
+        "run per second": 2236.07,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 132096,
+        "stored bytes per run": 132096
+    }
+}

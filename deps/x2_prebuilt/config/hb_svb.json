@@ -1,0 +1,14 @@
+{
+	"config_number":1,
+	"board_name":"svb",
+	"config_0":{
+		"port_number":1,
+		"port0":{
+			"i2c_bus":0,
+			"sensor_addr":"0x35",
+			"sensor_name":"ov13855",
+			"power_mode":0,
+			"config_path":"/etc/cam/hb_mipi_ov13855.json"
+		}
+	}
+}

@@ -1,0 +1,27 @@
+{
+	"hbdk_info": {
+		"cmake_build_type": " releasewithassert",
+		"git_branch": " TC3.4.0",
+		"git_version": " 3ca1533",
+		"release_type": " public",
+		"runtime version": " 3.5.3",
+		"supported_march": " bernoulli, bernoulli2, ",
+		"version": " 3.7.10"
+	},
+	"pub_model_info": {
+		"pub_model_name": "vehicle_type_ai_express",
+		"pub_version": "v0.0.1",
+		"models_list": [
+			{
+				"model_name": "vehicle_type_ai_express",
+				"version": "v0.0.1",
+				"output_model_name": "vehicleType.hbm",
+				"hbm_md5": "58aaaadea3d5b8cbef65ddf3bcd1d739",
+				"model_json_file": "/gpfs/plat_aidi/model/2033/IntInference/vehicle_type_v2_25_s128-hobot-predict-kX2-final-symbol_v1.0.5.json",
+				"json_file_md5": "6251250859fc06a6642e771515d2a14d",
+				"model_param_file": "/gpfs/plat_aidi/model/2033/IntInference/vehicle_type_v2_25_s128-hobot-predict-kX2-final-0020_v1.0.5.params",
+				"param_file_md5": "c98089df263a9ad12dd56df4411b33f9"
+			}
+		]
+	}
+}

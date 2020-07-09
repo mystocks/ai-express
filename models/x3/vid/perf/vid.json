@@ -1,0 +1,73 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 1161216,
+        "BPU OPs per frame (working)": 9264128,
+        "BPU OPs per run (effective)": 1161216,
+        "BPU OPs per run (working)": 9264128,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI2",
+        "BPU utilization (effective)": 0.045,
+        "BPU utilization (working)": 0.357,
+        "DDR bytes per frame": 140000,
+        "DDR bytes per run": 140000,
+        "DDR bytes per second": 2762430939,
+        "DDR megabytes per frame": 0.134,
+        "DDR megabytes per run": 0.134,
+        "DDR megabytes per second": 2634.5,
+        "FPS": 19731.65,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli2 -m /gpfs/plat_aidi/model/1941/IntInference/predict-vid-symbol.json -p /gpfs/plat_aidi/model/1941/IntInference/predict-vid-0001.params -s 1x8x1x256 -i ddr --O2 -o vid.hbm",
+        "frame per run": 1,
+        "frame per second": 19731.65,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "input__output",
+                "1x8x1x256"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.0,
+            0.0,
+            0.0,
+            0.888,
+            0.912,
+            0.009
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            1065,
+            1065,
+            1333,
+            7499,
+            2077,
+            305
+        ],
+        "interval number": 6,
+        "interval storing bandwidth (megabytes/s)": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            3
+        ],
+        "interval time (ms)": 0.01,
+        "latency (ms)": 0.1,
+        "latency (us)": 50.7,
+        "loaded bytes per frame": 139968,
+        "loaded bytes per run": 139968,
+        "model json CRC": "b86f2614",
+        "model json file": "/gpfs/plat_aidi/model/1941/IntInference/predict-vid-symbol.json",
+        "model name": "vid",
+        "model param CRC": "a5f5d589",
+        "model param file": "/gpfs/plat_aidi/model/1941/IntInference/predict-vid-0001.params",
+        "run per second": 19731.65,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 32,
+        "stored bytes per run": 32
+    }
+}

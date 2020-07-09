@@ -1,0 +1,76 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 24252416,
+        "BPU OPs per frame (working)": 34794496,
+        "BPU OPs per run (effective)": 24252416,
+        "BPU OPs per run (working)": 34794496,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI",
+        "BPU utilization (effective)": 0.442,
+        "BPU utilization (working)": 0.634,
+        "DDR bytes per frame": 351744,
+        "DDR bytes per run": 351744,
+        "DDR bytes per second": 2624881766,
+        "DDR megabytes per frame": 0.335,
+        "DDR megabytes per run": 0.335,
+        "DDR megabytes per second": 2503.3,
+        "FPS": 7462.48,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli -m /gpfs/plat_aidi/model/2033/IntInference/vehicle_type_v2_25_s128-hobot-predict-kX2-final-symbol_v1.0.5.json -p /gpfs/plat_aidi/model/2033/IntInference/vehicle_type_v2_25_s128-hobot-predict-kX2-final-0020_v1.0.5.params -s 1x128x128x3 -i pyramid --O2 -o vehicleType.hbm",
+        "frame per run": 1,
+        "frame per second": 7462.48,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "backbone2_quantiinput0_quantiinput0_output",
+                "1x128x128x3"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.0,
+            0.866,
+            0.766,
+            0.667,
+            0.689,
+            0.789,
+            0.47
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            1070,
+            441,
+            1462,
+            2271,
+            3116,
+            4059,
+            2686
+        ],
+        "interval number": 7,
+        "interval storing bandwidth (megabytes/s)": [
+            0,
+            0,
+            608,
+            563,
+            390,
+            97,
+            3
+        ],
+        "interval time (ms)": 0.02,
+        "latency (ms)": 0.1,
+        "latency (us)": 134.0,
+        "loaded bytes per frame": 316864,
+        "loaded bytes per run": 316864,
+        "model json CRC": "e8d066c3",
+        "model json file": "/gpfs/plat_aidi/model/2033/IntInference/vehicle_type_v2_25_s128-hobot-predict-kX2-final-symbol_v1.0.5.json",
+        "model name": "vehicleType",
+        "model param CRC": "3462f655",
+        "model param file": "/gpfs/plat_aidi/model/2033/IntInference/vehicle_type_v2_25_s128-hobot-predict-kX2-final-0020_v1.0.5.params",
+        "run per second": 7462.48,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 34880,
+        "stored bytes per run": 34880
+    }
+}

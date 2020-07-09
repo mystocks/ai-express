@@ -1,0 +1,73 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 24252416,
+        "BPU OPs per frame (working)": 34797568,
+        "BPU OPs per run (effective)": 24252416,
+        "BPU OPs per run (working)": 34797568,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI2",
+        "BPU utilization (effective)": 0.419,
+        "BPU utilization (working)": 0.6,
+        "DDR bytes per frame": 382816,
+        "DDR bytes per run": 382816,
+        "DDR bytes per second": 3380273730,
+        "DDR megabytes per frame": 0.365,
+        "DDR megabytes per run": 0.365,
+        "DDR megabytes per second": 3223.7,
+        "FPS": 8830.02,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli2 -m /gpfs/plat_aidi/model/1332/IntInference/vehicle_color_v2_025_s128-hobot-predict-kX2-final-symbol.json -p /gpfs/plat_aidi/model/1332/IntInference/vehicle_color_v2_025_s128-hobot-predict-kX2-final-0010.params -s 1x128x128x3 -i pyramid --O2 -o vehicle_color.hbm",
+        "frame per run": 1,
+        "frame per second": 8830.02,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "backbone3_quantiinput0_quantiinput0_output",
+                "1x128x128x3"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.102,
+            0.863,
+            0.63,
+            0.651,
+            0.741,
+            0.411
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            1303,
+            953,
+            2385,
+            3332,
+            4828,
+            3495
+        ],
+        "interval number": 6,
+        "interval storing bandwidth (megabytes/s)": [
+            0,
+            410,
+            566,
+            585,
+            369,
+            24
+        ],
+        "interval time (ms)": 0.02,
+        "latency (ms)": 0.1,
+        "latency (us)": 113.2,
+        "loaded bytes per frame": 341792,
+        "loaded bytes per run": 341792,
+        "model json CRC": "8e37bf67",
+        "model json file": "/gpfs/plat_aidi/model/1332/IntInference/vehicle_color_v2_025_s128-hobot-predict-kX2-final-symbol.json",
+        "model name": "vehicle_color",
+        "model param CRC": "c2a7e771",
+        "model param file": "/gpfs/plat_aidi/model/1332/IntInference/vehicle_color_v2_025_s128-hobot-predict-kX2-final-0010.params",
+        "run per second": 8830.02,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 41024,
+        "stored bytes per run": 41024
+    }
+}

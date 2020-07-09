@@ -1,0 +1,27 @@
+{
+	"hbdk_info": {
+		"cmake_build_type": " releasewithassert",
+		"git_branch": " TC3.4.0",
+		"git_version": " 3ca1533",
+		"release_type": " public",
+		"runtime version": " 3.5.3",
+		"supported_march": " bernoulli, bernoulli2, ",
+		"version": " 3.7.10"
+	},
+	"pub_model_info": {
+		"pub_model_name": "SegmentationMultitask",
+		"pub_version": "v0.0.3",
+		"models_list": [
+			{
+				"model_name": "SegmentationMultitask",
+				"version": "v0.0.3",
+				"output_model_name": "SegmentationMultitask.hbm",
+				"hbm_md5": "02e20f7a4d5a5fdf2e6da7b3f4ceafd3",
+				"model_json_file": "/gpfs/plat_aidi/model/2083/IntInference/segmentation_ouput_multitask_x2_infer-symbol.json",
+				"json_file_md5": "2d6869ecd3ba5f1f90d68aaf4d520888",
+				"model_param_file": "/gpfs/plat_aidi/model/2083/IntInference/segmentation_ouput_multitask_x2_infer-0033.params",
+				"param_file_md5": "2b438351a692543066e2151e1808a5ba"
+			}
+		]
+	}
+}

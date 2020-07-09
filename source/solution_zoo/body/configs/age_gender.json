@@ -1,0 +1,9 @@
+{
+  "model_name": "faceAgeGender",
+  "model_file_path": "../../models/faceAgeGender.hbm",
+  "model_version": "v1.0.4",
+  "bpu_config_path": "../configs/bpu_config.json",
+  "in_msg_type": "rect",
+  "post_fn": "age_gender",
+  "output_size": 2
+}

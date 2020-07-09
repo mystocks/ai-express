@@ -1,0 +1,284 @@
+/**
+* Copyright (c) 2019 Horizon Robotics. All rights reserved.
+* @file      vehicle.proto
+* @x2 vehicle structure infomation definition
+* @author    GYW, zhengwei.hu
+* @email
+* @date      2019.10.22
+* @version   1.0.2
+* @log
+*   20191022 - created
+*   20191104 - add Lane, location, speed, RoadCondition, VehicleFlow and ConfigMessage
+*/
+
+syntax = "proto3";
+package vehicle;
+option optimize_for = LITE_RUNTIME;
+
+/**
+ * 坐标点
+ * @x     x坐标
+ * @y     y坐标
+ * @score 置信度
+ */
+message Point {
+    float x = 1;
+    float y = 2;
+    float score = 3;
+}
+
+/**
+ * 坐标点集合
+ * @type   类型名称
+ * @points 坐标点集合
+ */
+message Points {
+    string type = 1;
+    repeated Point points = 2;
+}
+
+/**
+ * 检测框
+ * @type         类型名称
+ * @top_left     左上点
+ * @bottom_right 右下点
+ * @score 置信度
+ */
+message Box {
+    string type = 1;
+    Point top_left = 2;
+    Point bottom_right = 3;
+    float score = 4;
+}
+
+/**
+ * 图片信息
+ * @buf    图片二进制数据
+ * @buf    图片类型，如：JPG、灰度图、YUV420、NV21、NV12、BGR
+ * @width  图片宽度
+ * @height 图片高度
+ */
+message Image {
+    bytes  buf = 1;
+    string type = 2;
+    uint32 width = 3;
+    uint32 height = 4;
+}
+
+/**
+ * 车牌信息
+ * @box    车牌框
+ * @is_double_plate 是否双排车牌
+ * @points   车牌关键点数组
+ * @plate_num 车牌号
+ * @color 车牌颜色
+ * @type 车牌类型
+ */
+message Plate {
+    Box box = 1;
+    bool is_double_plate = 2;
+    Points points = 3;
+    bytes plate_num = 4;
+    int32 color = 5;
+    int32 type = 6;
+}
+/**
+ * GIS信息
+ * @longitude  经度
+ * @latitude   纬度
+ * @width      宽度
+ * @height	   高度
+ * @orientation 方向（0-360）
+ */
+message Gis {
+	float longitude = 1;
+	float latitude = 2;
+	float width = 3;
+	float height = 4;
+	float orientation = 5;
+}
+
+/**
+ * 车辆结构化信息
+ * @track_id 跟踪目标ID
+ * @type     车辆类型
+ *               0: 大货车
+ *               1: 公交车
+ *               2: 小货车
+ *               3: 商务车
+ *               4: 面包车
+ *               5: 中巴车
+ *               6: 越野车
+ *               7: 代步车
+ *               8: 轿车
+ *               9: 专用作业车
+ *               10: 三轮车
+ *               11: 其他
+ * @color    车辆颜色
+ *               0: 白
+ *               1: 银灰
+ *               2: 黑
+ *               3: 红
+ *               4: 棕
+ *               5: 蓝
+ *               6: 黄
+ *               7: 紫
+ *               8: 绿
+ *               9: 粉
+ *               10: 青
+ *               11: 金
+ *               12: 其他
+ * @box      车体框
+ * @points   车体关键点数组
+ * @plate_info 车牌信息
+ * @location 车辆物理位置（相对/绝对）, 单位m
+ * @speed    车辆速度(km/h)
+ * @lane_id  车辆所在车道id, 与前端标定对应
+ * @gis_info 车辆GIS信息
+ */
+message VehicleInfo {
+    uint64 track_id = 1;
+    int32 type = 2;
+    int32 color = 3;
+    Box box = 4;
+    Points points = 5;
+    Plate plate_info = 6;
+    Point location = 7;
+    uint32 lane_id = 8;
+    float speed = 9;
+	Gis   gis_info = 10;
+}
+
+/**
+ * 非机动车信息
+ * @track_id 跟踪目标ID
+ * @points   非机动车体关键点数组
+ * @location 非机动车辆物理位置（相对/绝对）, 单位m
+ * @speed    非机动车辆速度(km/h)
+ * @lane_id  非机动车辆所在车道id, 与前端标定对应
+ * @gis_info 非机动车辆GIS信息
+ */
+message Nonmotor {
+	uint64 track_id = 1;
+	Box box = 2;
+	Points points = 3;
+	Point location = 4;
+	uint32 lane_id = 5;
+    float speed = 6;
+	Gis gis_info = 7;
+}
+
+/**
+ * 人员信息
+ * @track_id 跟踪目标ID
+ * @points   人体关键点数组 - 预留
+ * @location 人物理位置（相对/绝对）, 单位m
+ * @speed    人速度(km/h)
+ * @lane_id  人所在车道id, 与前端标定对应
+ * @gis_info 人GIS信息
+ */
+message Person {
+	uint64 track_id = 1;
+	Box box = 2;
+	Points points = 3;
+	Point location = 4;
+	uint32 lane_id = 5;
+    float speed = 6;
+	Gis gis_info = 7;
+}
+
+/**
+ * 道路状况
+ * @timestamp 时间戳
+ * @type 道路状况类型：拥堵，事故，能见度低
+ *           1: 正常
+ *           2: 交通拥堵
+ *           3: 交通事故
+ *           4: 能见度低
+ * @value 道路状况值，比如拥堵数量，事故发生位置，能见度值 - 预留
+ */
+message TrafficCondition {
+    fixed64 timestamp = 1;
+    uint32 type = 2;
+    float value = 3;
+}
+
+/**
+ * 车流量
+ * @hour_index 时段 0-23， 0:0-1
+ * @cycle_count 每个时段周期数
+ * @cycle_minute 第几个周期
+ * @vechile_sum 总过车数
+ * @big_vechile_sum 大车过车数
+ * @small_vechile_sum 小车过车数
+ * @mean_speed 平均过车速度
+ */
+message TrafficFlow {
+    uint32 hour_index = 1;
+    uint32 cycle_count = 2;
+    uint32 cycle_minute = 3;
+    uint32 vehicle_sum = 4;
+    uint32 big_vehicle_sum = 5;
+    uint32 small_vehicle_sum = 6;
+    float mean_speed = 7;
+}
+
+/**
+ * 违法行为
+ * @type      违法类型
+ *                0: 无异常
+ *                1: 逆向行驶
+ *                2: 压线
+ *                3: 货车不在货车车道上
+ *                4: 车辆不在应急车道上
+ *                5: 违章停车
+ *                6: 违章变道
+ * @vehicle_captures 违法的多次抓拍: 需保持里面重复内容一致
+ *  如车型车牌车颜色等。 lane_id speed platebox等除外
+ */
+message Anomaly {
+    int32 type = 1;
+    repeated VehicleCapture vehicle_captures = 2;
+}
+
+/**
+ * 车辆抓拍信息
+ * @timestamp 时间戳
+ * @vehicle   车辆结构化信息
+ * @images    抠图
+ */
+message VehicleCapture {
+    fixed64 timestamp = 1;
+    VehicleInfo vehicle = 2;
+    Image image = 3;
+}
+
+/**
+ * 智能分析数据
+ * @anomalys 车辆违法行为数组
+ * @captures 车辆抓拍信息数组
+ * @traffic_conditions 道路状况
+ * @traffic_flow 车流量统计信息
+ */
+message SmartMessage {
+    repeated Anomaly anomalys = 1;
+    repeated VehicleCapture captures = 2;
+    repeated TrafficCondition traffic_conditions= 3;
+    TrafficFlow traffic_flow = 4;
+}
+
+/**
+ * Vehicle Protobuf: Frame Message
+ * @timestamp  时间戳，与原视频帧对应
+ * @vehicles   车辆结构化信息数组
+ * @nonmotors  非机动车数组 - 预留
+ * @persons    人员信息数字 - 预留
+ * @smart_msg  智能分析数据
+ */
+message FrameMessage {
+    fixed64 timestamp = 1;
+    repeated VehicleInfo vehicles= 2;
+    repeated Nonmotor nonmotors = 3;
+    repeated Person persons = 4;
+    SmartMessage smart_msg = 5;
+}
