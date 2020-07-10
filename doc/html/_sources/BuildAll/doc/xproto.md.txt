@@ -229,7 +229,7 @@ public:
 ```
 关于VIOPlugin，详细参考[README](../../xsdk/common/xproto/plugins/vioplugin/README.md)。
 
-### 1.1 IoTVioPlugin
+### 2. IoTVioPlugin
 IoTVioPlugin的的应用场景是用于X3系统，整体框架、消息总线传输机制实际是和上面VIOPlugin的功能类似。主要功能负责获取、转换图像数据并控制图像数据获取速率，然后将图像数据或丢帧消息推送给消息总线。针对于接口层，最主要的区别是IoTVioPlugin不仅支持与X2 VioPlugin相同的原生接口，还是支持与海思一样类似的接口。IoTVioPlugin同样分为两个部分：
 * **图像数据的获取**：图像来源可以分为SIF（摄像头）、JPEG回灌图片和NV12回灌图片。
 * **控制图像数据获取速率**：VioPlugin中通过定长buffer来实现速率控制。buffer大小可以通过JSON文件进行配置。单输入图像源的情况下理论最多可达7个，当智能帧产生速率过慢，buffer耗尽时，VioPlugin产生主动丢帧数据
@@ -393,11 +393,7 @@ IotVioPlugin总体配置文件与上面的基本一致, 最主要的区别是Iot
 
 
 ```
-
-# 其余框架
-
-
-### 2. SmartPlugin
+### 3. SmartPlugin
 SmartPlugin是基于XStream通用SDK接口开发的通用智能应用运行框架。它监听XProto总线上面的VioPlugin送来的`XPLUGIN_IMAGE_MESSAGE`类型消息，并且将它送到XStream的workflow实例里面，同时接收workflow输出的结果，并将其序列化后产生智能消息然后送回到消息总线上。
 
 SmartPlugin主要是作为XStream的Container，它会将XStream Output数据以`XPLUGIN_IMAGE_MESSAGE`类型推送到总线中。
@@ -439,7 +435,7 @@ SmartPlugin只支持加载一个workflow配置文件，但是在一些AI盒子�
 
 关于SmartPlugin，详细参考[README](../../xsdk/common/xproto/plugins/smartplugin/README.md)。
 
-### 3. HbipcPlugin
+### 4. HbipcPlugin
 
 HbipcPlugin为跨板传输插件，主要负责实现AP与地平线CP端的双向通信功能，CP端通过HbipcPlugin将智能帧等数据发送到AP端，或者通过HbipcPlugin接收AP端发过来的配置数据与命令数据。
 
