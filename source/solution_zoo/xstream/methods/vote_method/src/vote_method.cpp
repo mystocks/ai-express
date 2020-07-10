@@ -300,7 +300,7 @@ void VoteMethod::RunSingleFrame(const std::vector<BaseDataPtr> &frame_input,
       LOGI << "info:" << info;
       auto iter = slide_window_map.find(track_id);
       // if invaild use prev frame info
-      if ((type_ != LIVING_BEHAVIOR && info == InvalidType)) {
+      if (type_ != LIVING_BEHAVIOR && type_ != GENDER && info == InvalidType) {
         if (iter == slide_window_map.end()) {
           vote_info.value = InvalidType;
         } else {

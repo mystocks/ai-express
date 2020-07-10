@@ -37,23 +37,9 @@
     },
     {
       "method_type": "FilterMethod",
-      "unique_name": "face_filter",
-      "inputs": ["face_box"],
-      "outputs": ["face_filter_info", "face_box_after_filter"],
-      "method_config_file": "box_filter_config.json"
-    },
-    {
-      "method_type": "FilterMethod",
-      "unique_name": "head_filter",
-      "inputs": ["head_box"],
-      "outputs": ["head_filter_info", "head_box_after_filter"],
-      "method_config_file": "box_filter_config.json"
-    },
-    {
-      "method_type": "FilterMethod",
-      "unique_name": "body_filter",
-      "inputs": ["body_box"],
-      "outputs": ["body_filter_info", "body_box_after_filter"],
+      "unique_name": "box_filter",
+      "inputs": ["face_box", "head_box", "body_box"],
+      "outputs": ["box_filter_info", "face_box_after_filter", "head_box_after_filter", "body_box_after_filter"],
       "method_config_file": "box_filter_config.json"
     },
     {

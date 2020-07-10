@@ -110,6 +110,12 @@ bool VisualConfig::CheckConfig() {
   if(json_.isMember("packet_size")) {
     packet_size_ = json_["packet_size"].asUInt();
   }
+  if (json_.isMember("frame_buf_depth")) {
+    frame_buf_depth_ = json_["frame_buf_depth"].asUInt();
+  }
+  if (json_.isMember("dump_jpg_num")) {
+    dump_jpg_num_ = json_["dump_jpg_num"].asUInt();
+  }
   // check the value
   // to do ..
   return true;

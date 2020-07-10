@@ -100,8 +100,9 @@ int WebsocketPlugin::Start() {
   /* 1.3 media codec venc chn init */
   int pic_width = config_->image_width_;
   int pic_height = config_->image_height_;
+  int frame_buf_depth = config_->frame_buf_depth_;
   rv = manager.EncodeChnInit(chn_, PT_JPEG, pic_width, pic_height,
-          HB_PIXEL_FORMAT_NV12);
+          frame_buf_depth, HB_PIXEL_FORMAT_NV12);
   HOBOT_CHECK(rv == 0);
   /* 1.4 set media codec venc jpg chn qfactor params */
   rv = manager.SetUserQfactorParams(chn_, config_->jpeg_quality_);
@@ -110,7 +111,7 @@ int WebsocketPlugin::Start() {
   rv = manager.EncodeChnStart(chn_);
   HOBOT_CHECK(rv == 0);
   /* 1.6 alloc media codec vb buffer init */
-  int vb_num = 8;
+  int vb_num = frame_buf_depth;
   int pic_stride = config_->image_width_;
   int pic_size = pic_stride * pic_height * 3 / 2;  // nv12 format
   rv = manager.VbBufInit(chn_, pic_width, pic_height, pic_stride,
@@ -299,18 +300,15 @@ int WebsocketPlugin::FeedVideo(XProtoMessagePtr msg) {
       x3_frames_.push_back(x3_frame_msg);
       if (x3_frames_.size() > cache_size_)
         LOGW << "the cache is full, maybe the encode thread is slowly";
-#if 0
-        static bool first = true;
-        if (first) {
-            static int frame_id = 0;
-            std::string file_name = "out_stream_" +
-                std::to_string(frame_id++) + ".jpg";
-            std::fstream fout(file_name, std::ios::out | std::ios::binary);
-            fout.write((const char *)img_buf.data(), img_buf.size());
-            fout.close();
-            first = false;  // only dump one jpg picture
-        }
-#endif
+      /* dump jpg picture */
+      if (config_->dump_jpg_num_-- > 0) {
+          static int frame_id = 0;
+          std::string file_name = "out_stream_" +
+              std::to_string(frame_id++) + ".jpg";
+          std::fstream fout(file_name, std::ios::out | std::ios::binary);
+          fout.write((const char *)img_buf.data(), img_buf.size());
+          fout.close();
+      }
     }
   }
   return 0;

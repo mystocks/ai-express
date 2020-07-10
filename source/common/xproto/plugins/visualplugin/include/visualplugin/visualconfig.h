@@ -65,6 +65,8 @@ class VisualConfig {
   DisplayType display_mode_;
   uint32_t image_width_, image_height_;
   uint32_t data_buf_size_, packet_size_;
+  int frame_buf_depth_;
+  int dump_jpg_num_;
 };
 
 }  // namespace visualplugin

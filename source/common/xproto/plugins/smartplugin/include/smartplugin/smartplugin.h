@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "xproto/message/pluginflow/flowmsg.h"
 #include "xproto/plugin/xpluginasync.h"
@@ -70,6 +71,8 @@ struct CustomSmartMessage : SmartMessage {
 
  private:
   xstream::OutputDataPtr smart_result;
+  static std::map<int, int> fall_state_;
+  static std::mutex fall_mutex_;
 };
 
 class SmartPlugin : public XPluginAsync {

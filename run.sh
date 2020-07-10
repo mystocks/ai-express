@@ -45,6 +45,7 @@ then
         sed -i 's#\("image_height": \).*#\1'1080',#g' configs/visualplugin_face.json
         sed -i 's#\("image_height": \).*#\1'1080',#g' configs/visualplugin_body.json
         sed -i 's#\("image_height": \).*#\1'1080',#g' configs/visualplugin_vehicle.json
+        cp -rf body_solution/configs/box_filter_config_2M.json  body_solution/configs/box_filter_config.json
         cp -rf body_solution/configs/multitask_config_2M.json  body_solution/configs/multitask_config.json
         cp -rf body_solution/configs/segmentation_multitask_2M.json  body_solution/configs/segmentation_multitask.json
         cp -rf face_solution/configs/face_pose_lmk_2M.json face_solution/configs/face_pose_lmk.json
@@ -70,6 +71,7 @@ then
         sed -i 's#\("image_height": \).*#\1'1080',#g' configs/visualplugin_face.json
         sed -i 's#\("image_height": \).*#\1'1080',#g' configs/visualplugin_body.json
         sed -i 's#\("image_height": \).*#\1'1080',#g' configs/visualplugin_vehicle.json
+        cp -rf body_solution/configs/box_filter_config_8M.json  body_solution/configs/box_filter_config.json
         cp -rf body_solution/configs/multitask_config_8M.json  body_solution/configs/multitask_config.json
         cp -rf body_solution/configs/segmentation_multitask_8M.json  body_solution/configs/segmentation_multitask.json
         cp -rf face_solution/configs/face_pose_lmk_8M.json face_solution/configs/face_pose_lmk.json
@@ -87,6 +89,7 @@ then
         sed -i 's#\("image_height": \).*#\1'768',#g' configs/visualplugin_face.json
         sed -i 's#\("image_height": \).*#\1'768',#g' configs/visualplugin_body.json
         sed -i 's#\("image_height": \).*#\1'768',#g' configs/visualplugin_vehicle.json
+        cp -rf body_solution/configs/box_filter_config_12M.json  body_solution/configs/box_filter_config.json
         cp -rf body_solution/configs/multitask_config_12M.json  body_solution/configs/multitask_config.json
         cp -rf body_solution/configs/segmentation_multitask_12M.json  body_solution/configs/segmentation_multitask.json
     elif [ $sensor == "s5kgm_2160p" ]; then
@@ -109,6 +112,7 @@ then
         sed -i 's#\("image_height": \).*#\1'1080',#g' configs/visualplugin_face.json
         sed -i 's#\("image_height": \).*#\1'1080',#g' configs/visualplugin_body.json
         sed -i 's#\("image_height": \).*#\1'1080',#g' configs/visualplugin_vehicle.json
+        cp -rf body_solution/configs/box_filter_config_8M.json  body_solution/configs/box_filter_config.json
         cp -rf body_solution/configs/multitask_config_8M.json  body_solution/configs/multitask_config.json
         cp -rf body_solution/configs/segmentation_multitask_8M.json  body_solution/configs/segmentation_multitask.json
         cp -rf face_solution/configs/face_pose_lmk_8M.json face_solution/configs/face_pose_lmk.json
@@ -117,6 +121,7 @@ then
     elif [ $sensor == "hg" ]; then
         echo "feedback start, default resolution 1080P, 1080P X3 JPEG Codec..."
         vio_cfg_file=${vio_cfg_file}.iot.hg
+        cp -rf body_solution/configs/box_filter_config_2M.json  body_solution/configs/box_filter_config.json
         cp -rf body_solution/configs/multitask_config_2M.json  body_solution/configs/multitask_config.json
         cp -rf body_solution/configs/segmentation_multitask_2M.json  body_solution/configs/segmentation_multitask.json
         cp -rf face_solution/configs/face_pose_lmk_2M.json face_solution/configs/face_pose_lmk.json

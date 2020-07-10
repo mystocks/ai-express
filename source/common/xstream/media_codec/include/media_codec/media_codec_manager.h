@@ -76,7 +76,7 @@ class MediaCodecManager {
   }
 
   int EncodeChnInit(int chn, PAYLOAD_TYPE_E type, int width, int height,
-          PIXEL_FORMAT_E pix_fmt);
+          int frame_buf_depth, PIXEL_FORMAT_E pix_fmt);
   int EncodeChnDeInit(int chn);
   int EncodeChnStart(int chn);
   int EncodeChnStop(int chn);
@@ -97,7 +97,7 @@ class MediaCodecManager {
 
  private:
   int SetDefaultChnAttr(VENC_CHN_ATTR_S *pVencChnAttr, PAYLOAD_TYPE_E type,
-          int width, int height, PIXEL_FORMAT_E pix_fmt);
+          int width, int height, int frame_buf_depth, PIXEL_FORMAT_E pix_fmt);
 
   int SetDefaultRcParams(int chn, PAYLOAD_TYPE_E type, VENC_CHN_ATTR_S *attr);
   int AllocFrameBuffer(int chn, iot_venc_stream_buf_t *buf);

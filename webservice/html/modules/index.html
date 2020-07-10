@@ -47,12 +47,34 @@
           <a href="https://developer.horizon.ai/" target="__blank">OpenExplorer 首页链接</a>
         </p>
         <li id="message-t">智能信息展示</li>
-        <li><input class="message-show" type="checkbox" name="item"><label>检测（人体框，人头框，人脸框，车、非机动车检测框，其他检测框（宠物、椅子等））</label></li>
-        <li><input class="message-show" type="checkbox" name="item"><label>人体（人体骨骼，人体分割）</label></li>
-        <li><input class="message-show" type="checkbox" name="item"><label>人脸（人脸关键点，人脸姿态）</label></li>
-        <li><input class="message-show" type="checkbox" name="item"><label>分类信息（年龄性别、口罩眼镜等）</label></li>
-        <li><input class="message-show" type="checkbox" name="item"><label>分割</label></li>
-        <li><input class="message-show" type="checkbox" name="item" disabled='true'><label>深度</label></li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" dataType="boxes" checked="true">
+          <label>检测（人体框，人头框，人脸框，车、非机动车检测框，其他检测框（宠物、椅子等））</label>
+        </li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" dataType="body" checked="true">
+          <label>人体（人体骨骼）</label>
+        </li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" dataType="face" checked="true">
+          <label>人脸（人脸关键点，人脸姿态）</label>
+        </li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" dataType="attributes" checked="true">
+          <label>分类信息（年龄性别、口罩眼镜等）</label>
+        </li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" dataType="floatMatrixs" checked="true">
+          <label>分割</label>
+        </li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" dataType="floatMatrixsMask">
+          <label>人体分割</label>
+        </li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" disabled='true'>
+          <label>深度</label>
+        </li>
       </ul>
     </div>
     <div class="performance">
@@ -70,7 +92,6 @@
   </div>
 
   <script src="./page1/main.js"></script>
-  <!-- <script src="./page2/main.js"></script> -->
   <script src="./main.js"></script>
 </body>
 

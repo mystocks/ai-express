@@ -138,7 +138,11 @@ class FeatureSequenceBuffer {
     }
 
     for (auto& idx : clip_idxs) {
-      kpses->datas_.push_back(feats_->datas_[idx]);
+      auto tmp_kps_value = std::static_pointer_cast<
+          XStreamData<Landmarks>>(feats_->datas_[idx])->value;
+      auto p_tmp_kps = std::make_shared<XStreamData<Landmarks>>();
+      p_tmp_kps->value = tmp_kps_value;
+      kpses->datas_.push_back(p_tmp_kps);
       boxes->datas_.push_back(boxes_->datas_[idx]);
     }
   }
@@ -186,7 +190,11 @@ class ActDataPreprocess {
       FeatureSequenceBuffer buffer(buff_len_);
       track_buffers_[track_id] = buffer;
     }
-    track_buffers_[track_id].Update(box, kps, timestamp);
+    auto kps_value = std::static_pointer_cast<
+        XStreamData<Landmarks>>(kps)->value;
+    auto p_kps = std::make_shared<XStreamData<Landmarks>>();
+    p_kps->value = kps_value;
+    track_buffers_[track_id].Update(box, p_kps, timestamp);
   }
 
   void NormKps(std::shared_ptr<BaseDataVector> kpses,

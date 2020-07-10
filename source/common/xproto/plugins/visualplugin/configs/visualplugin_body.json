@@ -11,5 +11,7 @@
   "data_buf_size": 3110400,
   "packet_size": 102400,
   "jpeg_quality": 50,
+  "frame_buf_depth": 5,
+  "dump_jpg_num": 0,
   "attribute_description_path": "configs/websocketplugin_attribute.json"
 }

@@ -75,7 +75,7 @@ int Convertor::GetYUV(cv::Mat &yuv_img, VioMessage *vio_msg, int level) {
 #ifdef X3_MEDIA_CODEC
 int Convertor::GetYUV(iot_venc_src_buf_t *frame_buf, VioMessage *vio_msg,
         int level) {
-  LOGV << "X3_MEDIA_CODEC: " << __FUNCTION__;
+  LOGI << "visualplugin x3 mediacodec: " << __FUNCTION__;
   if (!vio_msg || vio_msg->num_ == 0)
     return -1;
   auto pym_image = vio_msg->image_[0];

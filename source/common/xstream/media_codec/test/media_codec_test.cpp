@@ -33,7 +33,8 @@ int main(int argc, char *argv[]) {
     const char *inputFileName = "./data/input_nv12_1080p.yuv";
     const char *outputFileNameBak = "./data/output_stream_1080p";
     char outputFileName[MAX_FILE_NAME_LEN];
-    int out_stream_num = 12;
+    int frame_buf_depth = 5;
+    int out_stream_num = 5;
     iot_venc_src_buf_t *frame_buf = nullptr;
     iot_venc_stream_buf_t *stream_buf = nullptr;
 
@@ -51,7 +52,7 @@ int main(int argc, char *argv[]) {
     HOBOT_CHECK(ret == 0);
     /* 1.3 media codec venc chn init */
     ret = manager.EncodeChnInit(chn, PT_JPEG, pic_w, pic_h,
-            HB_PIXEL_FORMAT_NV12);
+            frame_buf_depth, HB_PIXEL_FORMAT_NV12);
     HOBOT_CHECK(ret == 0);
     /* 1.4 set media codec venc jpg chn qfactor params */
     ret = manager.SetUserQfactorParams(chn, 80);

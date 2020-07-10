@@ -75,24 +75,26 @@ function changeCheckboxShow() {
 
 function changeCheckboxSelect() {
   let messageShows = Array.from(document.querySelectorAll('.message-show'))
-  messageShows.map(function(item, index) {
-    item.checked = true
+  messageShows.map(item => {
     item.onclick = function() {
-      switch(index) {
-        case 0:
+      switch(item.getAttribute('dataType')) {
+        case "boxes":
           messageShowSelect.boxes = item.checked
         break;
-        case 1:
+        case "body":
           messageShowSelect.body = item.checked
         break;
-        case 2:
+        case "face":
           messageShowSelect.face = item.checked
         break;
-        case 3:
+        case "attributes":
           messageShowSelect.attributes = item.checked
         break;
-        case 4:
+        case "floatMatrixs":
           messageShowSelect.floatMatrixs = item.checked
+        break;
+        case "floatMatrixsMask":
+          messageShowSelect.floatMatrixsMask = item.checked
         break;
         default:
         break;
@@ -368,7 +370,6 @@ function transformData(buffer) {
               color.push([R, G, B]);
               labelStart += step;
             }
-
             if (item['floatMatrixs_'][0]['type_'] === 'segmentation') {
               floatMatrixs = { type: item['floatMatrixs_'][0]['type_'], data: [], w, h }
               item['floatMatrixs_'][0]['arrays_'].map(values => {
@@ -377,6 +378,7 @@ function transformData(buffer) {
                   floatMatrixs.data.push(colors[0], colors[1], colors[2], 155)
                 })
               })
+              floatMatrixs = messageShowSelect.floatMatrixs ? floatMatrixs : undefined
             } else if (item['floatMatrixs_'][0]['type_'] === 'mask') {
               floatMatrixs = { type: item['floatMatrixs_'][0]['type_'], data: [], w, h, floatWH }
               item['floatMatrixs_'][0]['arrays_'].map(values => {
@@ -390,12 +392,12 @@ function transformData(buffer) {
                 })
                 floatMatrixs.data.push(value)
               })
+              floatMatrixs = messageShowSelect.floatMatrixsMask ? floatMatrixs : undefined
             }
           }
           boxes = messageShowSelect.boxes ? boxes : []
           attributes.attributes = messageShowSelect.attributes ? attributes.attributes : []
           subTargets.boxes = messageShowSelect.boxes ? subTargets.boxes : []
-          floatMatrixs = messageShowSelect.floatMatrixs ? floatMatrixs : undefined
           return {
             id,
             attributes,

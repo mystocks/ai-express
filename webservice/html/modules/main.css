@@ -126,19 +126,26 @@ ul li, ol li {
   text-align: center;
 }
 
-input[type='checkbox']:not([disabled='true']) {
-  width: 26px;
-  height: 23px;
+input[type='checkbox'] {
+  width: 25px;
+  height: 22px;
   margin-right: 10px;
   -webkit-appearance: none;
   background: #fff url('../assets/images/noselect.png');
-  background-size: cover;
-  vertical-align: middle; 
+  background-size: 25px 22px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+input[disabled='true'] {
+  background: #fff url('../assets/images/disabled.png');
+  background-size: 25px 22px;
+  cursor: no-drop;
 }
 
 input[type='checkbox']:checked {
   background: #fff url('../assets/images/checked.png'); /* */
-  background-size: cover;
+  background-size: 25px 22px;
 }
 
 .message-change {

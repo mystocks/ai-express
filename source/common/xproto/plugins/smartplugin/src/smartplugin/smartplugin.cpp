@@ -186,6 +186,8 @@ std::string VehicleSmartMessage::Serialize() {
   return frame_msg_x3.SerializeAsString();
 }
 
+std::map<int, int> CustomSmartMessage::fall_state_;
+std::mutex CustomSmartMessage::fall_mutex_;
 void CustomSmartMessage::Serialize_Print(Json::Value &root) {
   LOGD << "Frame id: " << frame_id;
   auto name_prefix = [](const std::string name) -> std::string {
@@ -940,6 +942,23 @@ std::string CustomSmartMessage::Serialize(int ori_w, int ori_h, int dst_w,
           auto target = smart_target[body_box_list[i]->value.id];
           auto attrs = target->add_attributes_();
           attrs->set_type_("fall");
+          {
+            std::lock_guard<std::mutex> fall_lock(fall_mutex_);
+            auto id = body_box_list[i]->value.id;
+            if (fall_vote->value.value == 1) {
+              fall_state_[id] = 1;
+            } else {
+              if (fall_state_.find(id) != fall_state_.end()) {
+                if (fall_state_[id] > 0) {
+                  fall_vote->value.value = 1;
+                  fall_state_[id]++;
+                }
+                if (fall_state_[id] > 10) {
+                  fall_state_.erase(id);
+                }
+              }
+            }
+          }
           attrs->set_value_(fall_vote->value.value);
           attrs->set_score_(fall_vote->value.score);
           LOGD << " " << fall_vote->value.value;

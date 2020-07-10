@@ -21,7 +21,8 @@ namespace horizon {
 namespace vision {
 
 int MediaCodecManager::SetDefaultChnAttr(VENC_CHN_ATTR_S *pVencChnAttr,
-        PAYLOAD_TYPE_E type, int width, int height, PIXEL_FORMAT_E pix_fmt) {
+        PAYLOAD_TYPE_E type, int width, int height,
+        int frame_buf_depth,  PIXEL_FORMAT_E pix_fmt) {
     memset(pVencChnAttr, 0, sizeof(VENC_CHN_ATTR_S));
     pVencChnAttr->stVencAttr.enType = type;
 
@@ -34,8 +35,8 @@ int MediaCodecManager::SetDefaultChnAttr(VENC_CHN_ATTR_S *pVencChnAttr,
 
     if (type == PT_JPEG || type == PT_MJPEG) {
         pVencChnAttr->stVencAttr.enPixelFormat = pix_fmt;
-        pVencChnAttr->stVencAttr.u32BitStreamBufferCount = 1;
-        pVencChnAttr->stVencAttr.u32FrameBufferCount = 2;
+        pVencChnAttr->stVencAttr.u32BitStreamBufferCount = frame_buf_depth;
+        pVencChnAttr->stVencAttr.u32FrameBufferCount = frame_buf_depth;
         pVencChnAttr->stVencAttr.bExternalFreamBuffer = HB_TRUE;
         pVencChnAttr->stVencAttr.stAttrJpeg.dcf_enable = HB_FALSE;
         pVencChnAttr->stVencAttr.stAttrJpeg.quality_factor =
@@ -43,8 +44,8 @@ int MediaCodecManager::SetDefaultChnAttr(VENC_CHN_ATTR_S *pVencChnAttr,
         pVencChnAttr->stVencAttr.stAttrJpeg.restart_interval = 0;
     } else {
         pVencChnAttr->stVencAttr.enPixelFormat = pix_fmt;
-        pVencChnAttr->stVencAttr.u32BitStreamBufferCount = 5;
-        pVencChnAttr->stVencAttr.u32FrameBufferCount = 5;
+        pVencChnAttr->stVencAttr.u32BitStreamBufferCount = frame_buf_depth;
+        pVencChnAttr->stVencAttr.u32FrameBufferCount = frame_buf_depth;
         pVencChnAttr->stVencAttr.bExternalFreamBuffer = HB_TRUE;
     }
 
@@ -182,12 +183,13 @@ int MediaCodecManager::SetUserQfactorParams(int chn, int value) {
 }
 
 int MediaCodecManager::EncodeChnInit(int chn, PAYLOAD_TYPE_E type,
-        int width, int height, PIXEL_FORMAT_E pix_fmt) {
+        int width, int height, int frame_buf_depth, PIXEL_FORMAT_E pix_fmt) {
     int ret;
     VENC_CHN_ATTR_S VencChnAttr;
 
     /* 1. Set Venc chn Attr */
-    SetDefaultChnAttr(&VencChnAttr, type, width, height, pix_fmt);
+    SetDefaultChnAttr(&VencChnAttr, type, width, height,
+            frame_buf_depth, pix_fmt);
 
     /* 2. Create Venc chn */
     ret = HB_VENC_CreateChn(chn, &VencChnAttr);
@@ -338,9 +340,11 @@ int MediaCodecManager::AllocVbBuf2Lane(int index, void *buf,
     LOGD << "mmzAlloc index: " << index;
     LOGD << "vio_buf_addr: "   << buffer;
     LOGD << "buf_y_paddr: "    << buffer->frame_info.phy_ptr[0];
-    LOGD << "buf_y_vaddr "     << buffer->frame_info.vir_ptr[0];
+    LOGD << "buf_y_vaddr "
+         << reinterpret_cast<void*>(buffer->frame_info.vir_ptr[0]);
     LOGD << "buf_uv_paddr: "   << buffer->frame_info.phy_ptr[1];
-    LOGD << "buf_uv_vaddr: "   << buffer->frame_info.vir_ptr[1];
+    LOGD << "buf_uv_vaddr: "
+         << reinterpret_cast<void*>(buffer->frame_info.vir_ptr[1]);
 
     return 0;
 }
@@ -359,6 +363,7 @@ int MediaCodecManager::VbBufInit(int chn, int width, int height, int stride,
     VP_CONFIG_S vp_config;
     memset(&vp_config, 0x00, sizeof(VP_CONFIG_S));
     vp_config.u32MaxPoolCnt = MAX_POOL_CNT;
+    vp_config.cacheEnable = 1;
     ret = HB_VP_SetConfig(&vp_config);
     if (ret) {
         if (ret == HB_ERR_VP_BUSY) {
@@ -458,9 +463,11 @@ int MediaCodecManager::VbBufDeInit(int chn) {
                 LOGD << "mmzFree index: "  << i;
                 LOGD << "vio_buf_addr: "   << buffer;
                 LOGD << "buf_y_paddr: "    << buffer->frame_info.phy_ptr[0];
-                LOGD << "buf_y_vaddr "     << buffer->frame_info.vir_ptr[0];
+                LOGD << "buf_y_vaddr "
+                     << reinterpret_cast<void*>(buffer->frame_info.vir_ptr[0]);
                 LOGD << "buf_uv_paddr: "   << buffer->frame_info.phy_ptr[1];
-                LOGD << "buf_uv_vaddr: "   << buffer->frame_info.vir_ptr[1];
+                LOGD << "buf_uv_vaddr: "
+                     << reinterpret_cast<void*>(buffer->frame_info.vir_ptr[1]);
             } else {
                 LOGE << "hb sys free uv vio buf: " << i
                      << "failed, ret: " << ret;

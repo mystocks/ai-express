@@ -72,6 +72,7 @@ RenderFrame1.prototype.renderFrameStart = function (smartMsgData, messageShowSel
     smartMsgData.map(item => {
       if (item.boxes.length > 0) {
         let fall = false
+        // let box = item.boxes.filter(obj => obj.type === 'body')
         if (typeof item.attributes !== 'undefined') { //  && messageShowSelect.points
           htmls += this.renderAttributes(item.attributes, item.boxes[0])
           if (typeof item.attributes.fall !== 'undefined') {
@@ -88,9 +89,10 @@ RenderFrame1.prototype.renderFrameStart = function (smartMsgData, messageShowSel
         this.renderFramePoints(item.points)
       }
       if (typeof item.floatMatrixs !== 'undefined') {
-        if (item.floatMatrixs === 'segmentation') {
+        // console.log(item.floatMatrixs)
+        if (item.floatMatrixs.type === 'segmentation') {
           this.floatMatrixs(item.floatMatrixs)
-        } else {
+        } else if (item.floatMatrixs.type === 'mask') {
           this.floatMatrixsMask(item.floatMatrixs)
         }
       }

@@ -33,6 +33,7 @@ typedef struct HB_VP_POOL_CONFIG_S {
 
 typedef struct HB_VP_CONFIG_S {
     uint32_t u32MaxPoolCnt;
+    uint32_t cacheEnable;
     VP_POOL_CONFIG_S pubPool[VP_MAX_PUB_POOLS];
 } VP_CONFIG_S;
 
