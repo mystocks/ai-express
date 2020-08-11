@@ -55,6 +55,12 @@ TEST(FasterRCNNTest, FbPyramid) {
   std::string test_img = "./test/data/1080p.jpg";
   std::ifstream ifs(test_img);
   ASSERT_TRUE(ifs.is_open());
+#ifdef X3_X2_VIO
+  std::string fb_cfg = "./configs/vio_config/x3dev/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  std::string fb_cfg = "./configs/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
 #ifdef X2
   img_info_t feed_back_info;
   HbVioFbWrapper fb_handle("./configs/vio_onsemi0230_fb.json");
@@ -91,8 +97,7 @@ TEST(FasterRCNNTest, FbPyramid) {
   fb_handle.FreeImgInfo(&feed_back_info);
 #endif
 #ifdef X3
-  HbVioFbWrapperGlobal fb_handle(
-      "./configs/vio_config/x3dev/hb_vio_x3_1080_fb.json");
+  HbVioFbWrapperGlobal fb_handle(fb_cfg);
   int ret = fb_handle.Init();
   ASSERT_TRUE(ret == 0); // NOLINT
   uint32_t effective_w, effective_h;

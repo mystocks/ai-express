@@ -116,6 +116,12 @@ bool VisualConfig::CheckConfig() {
   if (json_.isMember("dump_jpg_num")) {
     dump_jpg_num_ = json_["dump_jpg_num"].asUInt();
   }
+  if (json_.isMember("jpg_encode_time")) {
+    jpg_encode_time_ = json_["jpg_encode_time"].asUInt();
+  }
+  if (json_.isMember("use_vb")) {
+    use_vb_ = json_["use_vb"].asUInt();
+  }
   // check the value
   // to do ..
   return true;

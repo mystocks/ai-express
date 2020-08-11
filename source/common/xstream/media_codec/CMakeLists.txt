@@ -9,11 +9,13 @@ include_directories(
 )
 
 file(GLOB PROJECT_INC
-    "include/*.h"
+    "include/media_codec/*.h"
+    "include/utils/*.h"
 )
 
 file(GLOB PROJECT_SRC
-    "src/*.cpp"
+    "src/media_codec/*.cpp"
+    "src/utils/*.cpp"
 )
 
 set(SOURCE_FILES ${PROJECT_SRC} ${PROJECT_INC})

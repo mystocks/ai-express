@@ -37,7 +37,8 @@ const std::map<std::string, PostFun> g_post_fun_map = {
     {"classify", PostFun::CLASSIFY},
     {"act_det", PostFun::ACT_DET},
     {"back_bone", PostFun::BACK_BONE},
-    {"vid", PostFun::VID}};
+    {"vid", PostFun::VID},
+    {"common_lmk", PostFun::COMMON_LMK}};
 
 const std::map<std::string, NormMethod> g_norm_method_map = {
     {"norm_by_width_length", NormMethod::BPU_MODEL_NORM_BY_WIDTH_LENGTH},
@@ -55,6 +56,10 @@ const std::map<std::string, NormMethod> g_norm_method_map = {
 const std::map<std::string, FilterMethod> g_filter_method_map = {
     {"out_of_range", FilterMethod::OUT_OF_RANGE},
     {"no_filter", FilterMethod::NO_FILTER}};
+
+const std::map<std::string, LmkSeqOutputType> g_lmkseq_output_map = {
+    {"fall", LmkSeqOutputType::FALL},
+    {"gesture", LmkSeqOutputType::GESTURE}};
 
 const std::vector<float> g_lmk_template = {
     38.2946f, 51.6963f, 73.5318f, 51.5014f, 56.0252f,

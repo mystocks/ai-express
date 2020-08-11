@@ -26,7 +26,7 @@ class IotVioConfig {
      std::string path_;
      Json::Value json_;
      mutable std::mutex mutex_;
-     iot_vio_cfg_t iot_vio_cfg_;
+     iot_vio_cfg_t iot_vio_cfg_ = { 0 };
 };
 
 #endif  // INCLUDE_IOT_VIO_CFG_H_

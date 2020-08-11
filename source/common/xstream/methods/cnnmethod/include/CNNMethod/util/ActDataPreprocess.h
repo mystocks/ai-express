@@ -13,6 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <fstream>
 #include "horizon/vision_type/vision_type.hpp"
 #include "hobotxsdk/xstream_data.h"
 #include "hobotlog/hobotlog.hpp"
@@ -52,6 +53,41 @@ struct Tensor {
     HOBOT_CHECK(x3 >= 0 && x3 < dim3);
     HOBOT_CHECK(x4 >= 0 && x4 < dim4);
     data[x1 * dim2 * dim3 * dim4 + x2 * dim3 * dim4 + x3 * dim4 + x4] = value;
+  }
+
+  void Display(int box_idx, int box_num, int handle_num) {
+    std::stringstream sstream;
+    sstream.precision(17);
+    sstream.setf(std::ios::fixed);
+    sstream << "[";
+    for (int n = 0; n < dim1; ++n) {
+      sstream << "[";
+      for (int c = 0; c < dim4; ++c) {
+        sstream << "[";
+        for (int h = 0; h < dim2; ++h) {
+          sstream << "[";
+          for (int w = 0; w < dim3; ++w) {
+            auto value =
+                data[n * dim2 * dim3 * dim4 + h * dim3 * dim4 + w * dim4 + c];
+            sstream << value;
+            if (w != dim3 - 1) sstream << ", ";
+          }
+          sstream << "]";
+          if (h != dim2 - 1) sstream << ", ";
+        }
+        sstream << "]";
+        if (c != dim4 - 1) sstream << ", ";
+      }
+      sstream << "]";
+      if (n != dim1 - 1) sstream << ", ";
+    }
+    sstream << "]";
+    if (box_idx != box_num - 1 || box_idx != handle_num - 1) {
+      sstream << ", ";
+    }
+    std::fstream outfile;
+    outfile.open("lmkseq_input_feature.txt", std::ios_base::app);
+    outfile << sstream.str().c_str();
   }
 
   std::vector<float> data;
@@ -198,21 +234,29 @@ class ActDataPreprocess {
   }
 
   void NormKps(std::shared_ptr<BaseDataVector> kpses,
-               std::shared_ptr<BaseDataVector> boxes) {
+               std::shared_ptr<BaseDataVector> boxes,
+               xstream::LmkSeqOutputType type) {
     HOBOT_CHECK(kpses->datas_.size() == static_cast<uint32_t>(seq_len_));
     auto first_kps =
         std::static_pointer_cast<XStreamData<Landmarks>>(kpses->datas_[0]);
-    Point left_hip = first_kps->value.values[11];
-    Point right_hip = first_kps->value.values[12];
-    float hip_x = left_hip.x * 0.5 + right_hip.x * 0.5;
-    float hip_y = left_hip.y * 0.5 + right_hip.y * 0.5;
-    LOGD << "hip_x: " << hip_x << ", hip_y: " << hip_y;
+    Point center;
+    if (type == xstream::LmkSeqOutputType::FALL) {
+      Point left_hip = first_kps->value.values[11];
+      Point right_hip = first_kps->value.values[12];
+      float hip_x = left_hip.x * 0.5 + right_hip.x * 0.5;
+      float hip_y = left_hip.y * 0.5 + right_hip.y * 0.5;
+      center.x = hip_x;
+      center.y = hip_y;
+    } else if (type == xstream::LmkSeqOutputType::GESTURE) {
+      center = first_kps->value.values[9];
+    }
+    LOGD << "center_x: " << center.x << ", center_y: " << center.y;
     max_score_ = -1;
     for (auto p_kps : kpses->datas_) {
       auto kps = std::static_pointer_cast<XStreamData<Landmarks>>(p_kps);
       for (int i = 0; i < num_kps_; ++i) {
-        kps->value.values[i].x -= hip_x;
-        kps->value.values[i].y -= hip_y;
+        kps->value.values[i].x -= center.x;
+        kps->value.values[i].y -= center.y;
 
         if (kps->value.values[i].score > max_score_) {
           max_score_ = kps->value.values[i].score;
@@ -253,7 +297,8 @@ class ActDataPreprocess {
   }
 
   void GetClipKps(std::shared_ptr<BaseDataVector> kpses,
-                  int track_id, float times_tamp) {
+                  int track_id, float times_tamp,
+                  xstream::LmkSeqOutputType type) {
     auto boxes = std::make_shared<BaseDataVector>();
     track_buffers_[track_id].GetClipFeatByEnd(
         kpses, boxes, seq_len_, stride_, max_gap_, times_tamp);
@@ -262,11 +307,11 @@ class ActDataPreprocess {
       return;
     }
     LOGD << "Got clip feat by end";
-    NormKps(kpses, boxes);
+    NormKps(kpses, boxes, type);
   }
 
   void Clean(std::shared_ptr<BaseDataVector> disappeared_track_ids) {
-    LOGW << "data preprocessor clean() called";
+    LOGD << "data preprocessor clean() called";
     for (size_t i = 0; i < disappeared_track_ids->datas_.size(); ++i) {
       auto disappeared_track_id =
           std::static_pointer_cast<XStreamData<uint32_t>>(

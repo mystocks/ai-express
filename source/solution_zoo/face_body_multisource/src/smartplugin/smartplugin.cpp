@@ -377,7 +377,7 @@ int SmartPlugin::Feed(XProtoMessagePtr msg) {
     LOGW << "Unknow Source ID: " << source_id;
     return 0;
   }
-  LOGI << "Source ID: " << source_id;
+  LOGD << "Source ID: " << source_id;
 
   auto target_sdk = iter->second;
   for (unsigned int i = 0; i < target_sdk.size(); i++) {

@@ -28,6 +28,10 @@ enum HB_MIPI_ERROR_CODE {
 	MIPI_DISENABLE_SENSOR_CLK_FAIL,
 	MIPI_SENSOR_FUNC_NOT_SUPPORT,
 	MIPI_SET_SENSOR_FPS_FAIL,
+	MIPI_I2C_WRITE_FAIL,
+	MIPI_I2C_READ_FAIL,
+	MIPI_SW_SENSOR_MODE_FAIL,
+	MIPI_INVALID_OPERATION
 };
 
 typedef struct HB_MIPI_SPI_DATA_S {
@@ -114,13 +118,20 @@ extern int HB_MIPI_SensorBindSerdes(MIPI_SENSOR_INFO_S *snsInfo,
 	uint32_t serdesIdx, uint32_t serdesPort);
 extern int HB_MIPI_SensorBindMipi(MIPI_SENSOR_INFO_S *snsInfo, uint32_t mipiIdx);
 extern int HB_MIPI_SetExtraMode(MIPI_SENSOR_INFO_S *snsInfo, uint32_t ExtraMode);
-
 extern int HB_MIPI_InitSensor(uint32_t devId, MIPI_SENSOR_INFO_S *snsInfo);
 // extern int HB_MIPI_MipiBindSerdes(uint32_t mipiIdx, uint32_t serdesId);
 extern int HB_MIPI_DeinitSensor(uint32_t devId);
 extern int HB_MIPI_ResetSensor(uint32_t devId);
 extern int HB_MIPI_UnresetSensor(uint32_t devId);
 extern int HB_MIPI_SetSensorFps(uint32_t devId, uint32_t fps);
+extern int HB_MIPI_GetSensorInfo(uint32_t devId, MIPI_SENSOR_INFO_S *snsInfo);
+extern int HB_MIPI_SwSensorFps(uint32_t devId, uint32_t fps);
+extern int HB_MIPI_SwSensorMode(uint32_t devId, uint32_t SenMode);
+
+extern int HB_MIPI_ReadSensor(uint32_t devId,
+	uint32_t regAddr, char *buffer, uint32_t size);
+extern int HB_MIPI_WriteSensor(uint32_t devId,
+	uint32_t regAddr, char *buffer, uint32_t size);
 
 extern int HB_MIPI_SetMipiHsMode(uint32_t mipiIdx, uint32_t laneMode);
 extern int HB_MIPI_ResetMipi(uint32_t mipiIdx);

@@ -1,9 +1,11 @@
 /*
  * @Copyright 2020 Horizon Robotics, Inc.
  */
+#include "./uvcplugin_config.h"
+
 #include <fstream>
 #include <iostream>
-#include "uvcplugin_config.h"
+
 #include "hobotlog/hobotlog.hpp"
 
 namespace horizon {
@@ -12,8 +14,7 @@ namespace xproto {
 namespace Uvcplugin {
 
 // uvc config
-UvcConfig::UvcConfig(const std::string &path) : path_(path)
-{
+UvcConfig::UvcConfig(const std::string &path) : path_(path) {
   auth_mode_ = 0;
   display_mode_ = UVC_MODE;
   layer_ = 4;
@@ -26,6 +27,9 @@ UvcConfig::UvcConfig(const std::string &path) : path_(path)
   image_height_ = 1080;
   data_buf_size_ = 3110400;
   packet_size_ = 102400;
+  res_2160p_layer_ = 0;
+  res_1080p_layer_ = 4;
+  res_720p_layer_ = 5;
 }
 
 bool UvcConfig::LoadConfig() {
@@ -78,17 +82,29 @@ bool UvcConfig::CheckConfig() {
     }
   }
   if (json_.isMember("layer")) {
-    layer_ = json_["layer"].asUInt();
+    layer_ = json_["layer"].asInt();
   }
+
+  if (json_.isMember("2160p_layer")) {
+    res_2160p_layer_ = json_["2160p_layer"].asInt();
+  }
+
+  if (json_.isMember("1080p_layer")) {
+    res_1080p_layer_ = json_["1080p_layer"].asInt();
+  }
+
+  if (json_.isMember("720p_layer")) {
+    res_720p_layer_ = json_["720p_layer"].asInt();
+  }
+
 
   if (json_.isMember("jpeg_quality")) {
     jpeg_quality_ = json_["jpeg_quality"].asUInt();
-    if (jpeg_quality_ > 100)
-      jpeg_quality_ = 100;
+    if (jpeg_quality_ > 100) jpeg_quality_ = 100;
   }
 
   if (json_.isMember("display_mode")) {
-      display_mode_ = static_cast<DisplayType>(json_["display_mode"].asUInt());
+    display_mode_ = static_cast<DisplayType>(json_["display_mode"].asUInt());
   }
 
   if (json_.isMember("smart_type")) {

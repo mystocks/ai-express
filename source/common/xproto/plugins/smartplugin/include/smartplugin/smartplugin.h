@@ -86,6 +86,7 @@ class SmartPlugin : public XPluginAsync {
   int Init() override;
   int Start() override;
   int Stop() override;
+  std::string desc() const { return "SmartPlugin"; }
 
  private:
   int Feed(XProtoMessagePtr msg);

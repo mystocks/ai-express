@@ -155,6 +155,19 @@ typedef struct {
 
 HBDK_PUBLIC extern hbrt_error_t hbrtSetGlobalConfig(const hbrt_global_config_t *config);
 
+typedef struct {
+  void *(*malloc_func)(size_t);
+  void (*free_func)(void *);
+  void *(*calloc_func)(size_t, size_t);
+  void *(*realloc_func)(void *, size_t);
+  char reserved_fields[64];
+} hbrt_global_memory_hook_t;
+
+#define HBRT_GLOBAL_MEMORY_HOOK_INITIALIZER \
+  { malloc, free, calloc, realloc }
+
+HBDK_PUBLIC extern hbrt_error_t hbrtSetGlobalMemoryHook(const hbrt_global_memory_hook_t *hook);
+
 /**
  * @brief Load a hbm binary from given address
  * @param [out] hbm_handle handle of this HBM, can be used as parameter for other APIs to obtain model

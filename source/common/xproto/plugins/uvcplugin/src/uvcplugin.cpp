@@ -9,21 +9,24 @@
  */
 
 #include "uvcplugin/uvcplugin.h"
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
+#include "./ring_queue.h"
 #include "hobotlog/hobotlog.hpp"
 #include "xproto/message/pluginflow/msg_registry.h"
-#include "xproto_msgtype/vioplugin_data.h"
 #include "xproto_msgtype/smartplugin_data.h"
+#include "xproto_msgtype/vioplugin_data.h"
 
 namespace horizon {
 namespace vision {
 namespace xproto {
 namespace Uvcplugin {
 using horizon::vision::xproto::XPluginErrorCode;
-using horizon::vision::xproto::basic_msgtype::VioMessage;
 using horizon::vision::xproto::basic_msgtype::SmartMessage;
+using horizon::vision::xproto::basic_msgtype::VioMessage;
 XPLUGIN_REGISTER_MSG_TYPE(XPLUGIN_UVC_MESSAGE)
 using std::chrono::milliseconds;
 bool write_flag = true;
@@ -36,27 +39,22 @@ UvcPlugin::UvcPlugin(std::string config_file) {
 }
 
 UvcPlugin::~UvcPlugin() {
-//  config_ = nullptr;
+  //  config_ = nullptr;
 }
 
 int UvcPlugin::Init() {
   LOGI << "UvcPlugin Init";
-
-  config_ = std::make_shared<UvcConfig>(config_file_);
-  if (!config_ || !config_->LoadConfig()) {
-    LOGE << "failed to load config file";
-    return -1;
-  }
+  RingQueue<VIDEO_STREAM_S>::Instance().Init(7, [](VIDEO_STREAM_S &elem) {
+    if (elem.pstPack.vir_ptr) {
+      free(elem.pstPack.vir_ptr);
+      elem.pstPack.vir_ptr = nullptr;
+    }
+  });
+  memset(&h264_sps_frame_, 0, sizeof(VIDEO_STREAM_S));
 
   uvc_server_ = std::make_shared<UvcServer>();
-  if (uvc_server_->Init(config_->image_width_, config_->image_height_, config_->video_type_)) {
+  if (uvc_server_->Init(config_file_)) {
     LOGE << "UwsPlugin Init uWS server failed";
-    return -1;
-  }
-
-  venc_client_ = std::make_shared<VencClient>();
-  if (venc_client_->Init(config_->image_width_, config_->image_height_, config_->video_type_)) {
-    LOGE << "UvcPlugin Init Uvc server failed";
     return -1;
   }
 
@@ -67,11 +65,11 @@ int UvcPlugin::Init() {
   }
 
   RegisterMsg(TYPE_IMAGE_MESSAGE,
-    std::bind(&UvcPlugin::FeedVideo, this, std::placeholders::_1));
-  RegisterMsg(TYPE_DROP_IMAGE_MESSAGE,
-    std::bind(&UvcPlugin::FeedVideoDrop, this, std::placeholders::_1)); 
+              std::bind(&UvcPlugin::FeedVideo, this, std::placeholders::_1));
+  RegisterMsg(TYPE_DROP_IMAGE_MESSAGE, std::bind(&UvcPlugin::FeedVideoDrop,
+                                                 this, std::placeholders::_1));
   RegisterMsg(TYPE_SMART_MESSAGE,
-    std::bind(&UvcPlugin::FeedSmart, this, std::placeholders::_1));
+              std::bind(&UvcPlugin::FeedSmart, this, std::placeholders::_1));
   // 调用父类初始化成员函数注册信息
   XPluginAsync::Init();
   return 0;
@@ -84,7 +82,6 @@ int UvcPlugin::Reset() {
 
 int UvcPlugin::Start() {
   uvc_server_->Start();
-  venc_client_->Start();
   hid_manager_->Start();
   return 0;
 }
@@ -93,28 +90,27 @@ int UvcPlugin::Stop() {
   LOGI << "UvcPlugin::Stop()";
   stop_flag_ = true;
   uvc_server_->DeInit();
-  venc_client_->Stop();
-  venc_client_->DeInit();
   hid_manager_->Stop();
   return 0;
 }
 
 int UvcPlugin::FeedSmart(XProtoMessagePtr msg) {
-  return hid_manager_->FeedSmart(msg);
+  return hid_manager_->FeedSmart(msg, origin_image_width_, origin_image_height_,
+                                 dst_image_width_, dst_image_height_);
 }
 
 int UvcPlugin::FeedVideo(XProtoMessagePtr msg) {
   LOGI << "UvcPlugin Feedvideo";
-  if (!uvc_server_->uvc_stream_on) {
-      return 0;
+  if (!UvcServer::uvc_stream_on) {
+    return 0;
   }
   VIDEO_FRAME_S pstFrame;
   memset(&pstFrame, 0, sizeof(VIDEO_FRAME_S));
   auto vio_msg = std::dynamic_pointer_cast<VioMessage>(msg);
-  int level = config_->layer_;
+  int level = UvcServer::config_->layer_;
 #ifdef X2
   auto image = vio_msg->image_[0]->image;
-  img_info_t *src_img = reinterpret_cast<img_info_t * >(image.data);
+  img_info_t *src_img = reinterpret_cast<img_info_t *>(image.data);
   auto height = src_img->down_scale[level].height;
   auto width = src_img->down_scale[level].width;
   auto y_addr = src_img->down_scale[level].y_vaddr;
@@ -126,46 +122,120 @@ int UvcPlugin::FeedVideo(XProtoMessagePtr msg) {
   pstFrame.stVFrame.pix_format = HB_PIXEL_FORMAT_NV12;
   pstFrame.stVFrame.width = src_img->down_scale[0].width;
   pstFrame.stVFrame.height = src_img->down_scale[0].height;
-  pstFrame.stVFrame.size = src_img->down_scale[0].width *
-                src_img->down_scale[0].height * 3 / 2;
+  pstFrame.stVFrame.size =
+      src_img->down_scale[0].width * src_img->down_scale[0].height * 3 / 2;
   pstFrame.stVFrame.phy_ptr[0] = src_img->down_scale[0].y_paddr;
   pstFrame.stVFrame.phy_ptr[1] = src_img->down_scale[0].c_paddr;
   pstFrame.stVFrame.vir_ptr[0] = src_img->down_scale[0].y_vaddr;
   pstFrame.stVFrame.vir_ptr[1] = src_img->down_scale[0].c_vaddr;
+
+  origin_image_width_ = src_img->down_scale[0].width;
+  origin_image_height_ = src_img->down_scale[0].height;
+  dst_image_width_ = src_img->down_scale[level].width;
+  dst_image_height_ = src_img->down_scale[level].height;
 #endif
-  LOGI << "uvcplugin feed video";
+
 #ifdef X3
   auto pym_image = vio_msg->image_[0];
   pstFrame.stVFrame.pix_format = HB_PIXEL_FORMAT_NV12;
   pstFrame.stVFrame.height = pym_image->down_scale[level].height;
   pstFrame.stVFrame.width = pym_image->down_scale[level].width;
-  pstFrame.stVFrame.size =
-    pym_image->down_scale[level].height * pym_image->down_scale[level].width * 3/2;
+  pstFrame.stVFrame.size = pym_image->down_scale[level].height *
+                           pym_image->down_scale[level].width * 3 / 2;
   pstFrame.stVFrame.phy_ptr[0] = (uint32_t)pym_image->down_scale[level].y_paddr;
   pstFrame.stVFrame.phy_ptr[1] = (uint32_t)pym_image->down_scale[level].c_paddr;
   pstFrame.stVFrame.vir_ptr[0] = (char *)pym_image->down_scale[level].y_vaddr;
   pstFrame.stVFrame.vir_ptr[1] = (char *)pym_image->down_scale[level].c_vaddr;
   pstFrame.stVFrame.pts = vio_msg->time_stamp_;
+
+  origin_image_width_ = pym_image->down_scale[0].width;
+  origin_image_height_ = pym_image->down_scale[0].height;
+  dst_image_width_ = pym_image->down_scale[level].width;
+  dst_image_height_ = pym_image->down_scale[level].height;
 #endif
-   int ret = HB_VENC_SendFrame(0, &pstFrame, 3000);
-   if (ret < 0) {
-       LOGE << "HB_VENC_SendFrame 0 error!!!ret " << ret;
-   }
+  int ret = HB_VENC_SendFrame(0, &pstFrame, 0);
+  if (ret < 0) {
+    LOGE << "HB_VENC_SendFrame 0 error!!!ret " << ret;
+  }
+
+  if (false == RingQueue<VIDEO_STREAM_S>::Instance().IsValid()) {
+    usleep(6 * 1000); /* sleep 6ms and re-encode */
+    return 0;
+  }
+  VIDEO_STREAM_S vstream;
+  memset(&vstream, 0, sizeof(VIDEO_STREAM_S));
+  ret = HB_VENC_GetStream(0, &vstream, 30);
+  if (ret < 0) {
+    LOGD << "HB_VENC_GetStream timeout: " << ret;
+    usleep(3 * 1000); /* sleep 3ms and re-encode */
+  } else {
+    auto video_buffer = vstream;
+    auto buffer_size = video_buffer.pstPack.size;
+    if (buffer_size > 5) {
+      int nal_type = static_cast<int>(vstream.pstPack.vir_ptr[4] & 0x1F);
+      LOGD << "nal type is " << nal_type;
+      if (nal_type == H264_NALU_SPS) {
+        {
+          if (h264_sps_frame_.pstPack.vir_ptr) {
+            free(h264_sps_frame_.pstPack.vir_ptr);
+            h264_sps_frame_.pstPack.vir_ptr = nullptr;
+          }
+          h264_sps_frame_ = vstream;
+          h264_sps_frame_.pstPack.vir_ptr = (char *)calloc(1, buffer_size);
+          memcpy(h264_sps_frame_.pstPack.vir_ptr, vstream.pstPack.vir_ptr,
+                   buffer_size);
+        }
+        video_buffer.pstPack.vir_ptr = (char *)calloc(1, buffer_size);
+        if (video_buffer.pstPack.vir_ptr) {
+          memcpy(video_buffer.pstPack.vir_ptr, vstream.pstPack.vir_ptr,
+                buffer_size);
+          RingQueue<VIDEO_STREAM_S>::Instance().Push(video_buffer);
+        }
+      } else if (nal_type == H264_NALU_IDR) {
+        if (h264_sps_frame_.pstPack.vir_ptr) {
+          VIDEO_STREAM_S video_buffer;
+          video_buffer = h264_sps_frame_;
+          auto sps_size = h264_sps_frame_.pstPack.size;
+          video_buffer.pstPack.vir_ptr = (char *)calloc(1, sps_size);
+          if (video_buffer.pstPack.vir_ptr) {
+            memcpy(video_buffer.pstPack.vir_ptr,
+                  h264_sps_frame_.pstPack.vir_ptr, sps_size);
+            RingQueue<VIDEO_STREAM_S>::Instance().Push(video_buffer);
+          }
+        }
+        video_buffer = vstream;
+        video_buffer.pstPack.vir_ptr = (char *)calloc(1, buffer_size);
+        if (video_buffer.pstPack.vir_ptr) {
+          memcpy(video_buffer.pstPack.vir_ptr, vstream.pstPack.vir_ptr,
+                   buffer_size);
+          RingQueue<VIDEO_STREAM_S>::Instance().Push(video_buffer);
+        }
+      } else {
+        video_buffer.pstPack.vir_ptr = (char *)calloc(1, buffer_size);
+        if (video_buffer.pstPack.vir_ptr) {
+          memcpy(video_buffer.pstPack.vir_ptr, vstream.pstPack.vir_ptr,
+                buffer_size);
+          RingQueue<VIDEO_STREAM_S>::Instance().Push(video_buffer);
+        }
+      }
+    }
+    HB_VENC_ReleaseStream(0, &vstream);
+  }
 
   return 0;
 }
 
 int UvcPlugin::FeedVideoDrop(XProtoMessagePtr msg) {
-  if (!uvc_server_->uvc_stream_on) {
-      return 0;
+  if (!UvcServer::uvc_stream_on) {
+    return 0;
   }
   VIDEO_FRAME_S pstFrame;
   memset(&pstFrame, 0, sizeof(VIDEO_FRAME_S));
   auto vio_msg = std::dynamic_pointer_cast<VioMessage>(msg);
-  int level = config_->layer_;
+  int level = UvcServer::config_->layer_;
 #ifdef X2
   auto image = vio_msg->image_[0]->image;
-  img_info_t *src_img = reinterpret_cast<img_info_t * >(image.data);
+  img_info_t *src_img = reinterpret_cast<img_info_t *>(image.data);
   auto height = src_img->down_scale[level].height;
   auto width = src_img->down_scale[level].width;
   auto y_addr = src_img->down_scale[level].y_vaddr;
@@ -177,33 +247,109 @@ int UvcPlugin::FeedVideoDrop(XProtoMessagePtr msg) {
   pstFrame.stVFrame.pix_format = HB_PIXEL_FORMAT_NV12;
   pstFrame.stVFrame.width = src_img->down_scale[0].width;
   pstFrame.stVFrame.height = src_img->down_scale[0].height;
-  pstFrame.stVFrame.size = src_img->down_scale[0].width *
-                src_img->down_scale[0].height * 3 / 2;
+  pstFrame.stVFrame.size =
+      src_img->down_scale[0].width * src_img->down_scale[0].height * 3 / 2;
   pstFrame.stVFrame.phy_ptr[0] = src_img->down_scale[0].y_paddr;
   pstFrame.stVFrame.phy_ptr[1] = src_img->down_scale[0].c_paddr;
   pstFrame.stVFrame.vir_ptr[0] = src_img->down_scale[0].y_vaddr;
   pstFrame.stVFrame.vir_ptr[1] = src_img->down_scale[0].c_vaddr;
 
-#endif
+  origin_image_width_ = src_img->down_scale[0].width;
+  origin_image_height_ = src_img->down_scale[0].height;
+  dst_image_width_ = src_img->down_scale[level].width;
+  dst_image_height_ = src_img->down_scale[level].height;
 
+#endif
+  
 #ifdef X3
   auto pym_image = vio_msg->image_[0];
   pstFrame.stVFrame.pix_format = HB_PIXEL_FORMAT_NV12;
   pstFrame.stVFrame.height = pym_image->down_scale[level].height;
   pstFrame.stVFrame.width = pym_image->down_scale[level].width;
-  pstFrame.stVFrame.size =
-    pym_image->down_scale[level].height * pym_image->down_scale[level].width * 3/2;
+  pstFrame.stVFrame.size = pym_image->down_scale[level].height *
+                           pym_image->down_scale[level].width * 3 / 2;
   pstFrame.stVFrame.phy_ptr[0] = (uint32_t)pym_image->down_scale[level].y_paddr;
   pstFrame.stVFrame.phy_ptr[1] = (uint32_t)pym_image->down_scale[level].c_paddr;
   pstFrame.stVFrame.vir_ptr[0] = (char *)pym_image->down_scale[level].y_vaddr;
   pstFrame.stVFrame.vir_ptr[1] = (char *)pym_image->down_scale[level].c_vaddr;
   pstFrame.stVFrame.pts = vio_msg->time_stamp_;
-#endif
-   int ret = HB_VENC_SendFrame(0, &pstFrame, 3000);
-   if (ret < 0) {
-       LOGE << "HB_VENC_SendFrame 0 error!!!ret " << ret;
-   }
 
+  origin_image_width_ = pym_image->down_scale[0].width;
+  origin_image_height_ = pym_image->down_scale[0].height;
+  dst_image_width_ = pym_image->down_scale[level].width;
+  dst_image_height_ = pym_image->down_scale[level].height;
+#endif
+  int ret = HB_VENC_SendFrame(0, &pstFrame, 0);
+  if (ret < 0) {
+    LOGD << "HB_VENC_SendFrame 0 error!!!ret " << ret;
+  }
+
+  if (false == RingQueue<VIDEO_STREAM_S>::Instance().IsValid()) {
+    usleep(6 * 1000); /* sleep 6ms and re-encode */
+    //  continue;
+    return 0;
+  }
+
+  VIDEO_STREAM_S vstream;
+  memset(&vstream, 0, sizeof(VIDEO_STREAM_S));
+  ret = HB_VENC_GetStream(0, &vstream, 30);
+  if (ret < 0) {
+    LOGD << "HB_VENC_GetStream timeout: " << ret;
+    usleep(3 * 1000); /* sleep 3ms and re-encode */
+  } else {
+    auto video_buffer = vstream;
+    auto buffer_size = video_buffer.pstPack.size;
+    if (buffer_size > 5) {
+      int nal_type = static_cast<int>(vstream.pstPack.vir_ptr[4] & 0x1F);
+      LOGD << "nal type is " << nal_type;
+      if (nal_type == H264_NALU_SPS) {
+      {
+          if (h264_sps_frame_.pstPack.vir_ptr) {
+            free(h264_sps_frame_.pstPack.vir_ptr);
+            h264_sps_frame_.pstPack.vir_ptr = nullptr;
+          }
+          h264_sps_frame_ = vstream;
+          h264_sps_frame_.pstPack.vir_ptr = (char *)calloc(1, buffer_size);
+          memcpy(h264_sps_frame_.pstPack.vir_ptr, vstream.pstPack.vir_ptr,
+                buffer_size);
+        }
+        video_buffer.pstPack.vir_ptr = (char *)calloc(1, buffer_size);
+        if (video_buffer.pstPack.vir_ptr) {
+          memcpy(video_buffer.pstPack.vir_ptr, vstream.pstPack.vir_ptr,
+                buffer_size);
+          RingQueue<VIDEO_STREAM_S>::Instance().Push(video_buffer);
+        }
+      } else if (nal_type == H264_NALU_IDR) {
+        if (h264_sps_frame_.pstPack.vir_ptr) {
+          VIDEO_STREAM_S video_buffer;
+          video_buffer = h264_sps_frame_;
+          auto sps_size = h264_sps_frame_.pstPack.size;
+          video_buffer.pstPack.vir_ptr = (char *)calloc(1, sps_size);
+          if (video_buffer.pstPack.vir_ptr) {
+            memcpy(video_buffer.pstPack.vir_ptr,
+                  h264_sps_frame_.pstPack.vir_ptr, sps_size);
+            RingQueue<VIDEO_STREAM_S>::Instance().Push(video_buffer);
+          }
+        }
+        video_buffer = vstream;
+        video_buffer.pstPack.vir_ptr = (char *)calloc(1, buffer_size);
+        if (video_buffer.pstPack.vir_ptr) {
+          memcpy(video_buffer.pstPack.vir_ptr, vstream.pstPack.vir_ptr,
+                  buffer_size);
+          RingQueue<VIDEO_STREAM_S>::Instance().Push(video_buffer);
+        }
+      } else {
+        video_buffer.pstPack.vir_ptr = (char *)calloc(1, buffer_size);
+        if (video_buffer.pstPack.vir_ptr) {
+          memcpy(video_buffer.pstPack.vir_ptr, vstream.pstPack.vir_ptr,
+                buffer_size);
+          RingQueue<VIDEO_STREAM_S>::Instance().Push(video_buffer);
+        }
+      }
+    }
+     LOGI << "drop debug 333";
+    HB_VENC_ReleaseStream(0, &vstream);
+  }
   return 0;
 }
 }  // namespace Uvcplugin

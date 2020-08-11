@@ -17,6 +17,7 @@
   <script src="../utils/threejs/inflate.min.js"></script>
   <script src="../utils/threejs/FBXLoader.js"></script>
   <script src="../utils/reconnecting-websocket.js"></script>
+  <!-- <script src="../utils/opencv.js" async onload="onOpenCvReady();" type="text/javascript"></script> -->
 </head>
 
 <body>
@@ -49,7 +50,15 @@
         <li id="message-t">智能信息展示</li>
         <li>
           <input class="message-show" type="checkbox" name="item" dataType="boxes" checked="true">
-          <label>检测（人体框，人头框，人脸框，车、非机动车检测框，其他检测框（宠物、椅子等））</label>
+          <label>检测框（人体框，人头框，人脸框，车、非机动车检测框，其他检测框（宠物、椅子等））</label>
+        </li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" dataType="handBox" checked="true">
+          <label>人手（检测框）</label>
+        </li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" dataType="handMarks" checked="true">
+          <label>人手（手势骨骼）</label>
         </li>
         <li>
           <input class="message-show" type="checkbox" name="item" dataType="body" checked="true">
@@ -72,7 +81,11 @@
           <label>人体分割</label>
         </li>
         <li>
-          <input class="message-show" type="checkbox" name="item" disabled='true'>
+          <input class="message-show" type="checkbox" name="item" dataType="scoreShow">
+          <label>模型置信度</label>
+        </li>
+        <li>
+          <input class="message-show" type="checkbox" name="item" dataType="depth" disabled='true'>
           <label>深度</label>
         </li>
       </ul>
@@ -90,7 +103,6 @@
     </div>
     <!-- <div id="alert"><img src="../assets/images/danger.png" width="16px" alt=""/> 有人摔倒啦</div> -->
   </div>
-
   <script src="./page1/main.js"></script>
   <script src="./main.js"></script>
 </body>

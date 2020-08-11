@@ -10,12 +10,12 @@
 #ifndef INCLUDE_UVCPLUGIN_HIDMANAGER_H_
 #define INCLUDE_UVCPLUGIN_HIDMANAGER_H_
 #include <memory>
+#include <queue>
 #include <string>
 #include <thread>
 #include <vector>
-#include <queue>
-#include "json/json.h"
 
+#include "json/json.h"
 #include "xproto/message/pluginflow/flowmsg.h"
 #include "xproto/plugin/xpluginasync.h"
 
@@ -24,8 +24,6 @@ namespace vision {
 namespace xproto {
 namespace Uvcplugin {
 using horizon::vision::xproto::XProtoMessagePtr;
-
-#define HID_MAX_PACKET_SIZE 1024
 
 class HidManager {
  public:
@@ -36,7 +34,8 @@ class HidManager {
   int Start();
   int Stop();
 
-  int FeedSmart(XProtoMessagePtr msg);
+  int FeedSmart(XProtoMessagePtr msg, int ori_image_width, int ori_image_height,
+                int dst_image_width, int dst_image_height);
   int Send(const std::string &proto_str);
   void SendThread();
 
@@ -46,11 +45,7 @@ class HidManager {
   Json::Value config_;
   std::shared_ptr<std::thread> thread_;
 
-  enum SmartType {
-    SMART_FACE,
-    SMART_BODY,
-    SMART_VEHICLE
-  };
+  enum SmartType { SMART_FACE, SMART_BODY, SMART_VEHICLE };
   SmartType smart_type_ = SMART_BODY;
 
   std::string hid_file_ = "/dev/hidg0";
@@ -59,10 +54,6 @@ class HidManager {
   const unsigned int queue_max_size_ = 5;
   std::queue<std::string> pb_buffer_queue_;
   std::condition_variable condition_;
-
-  typedef struct {
-    char null_array[HID_MAX_PACKET_SIZE];
-  } buffer_offset_size_t;
 };
 
 }  // namespace Uvcplugin

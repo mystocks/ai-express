@@ -1041,17 +1041,17 @@ VIN_DEV_ATTR_S DEV_ATTR_S5KGM1SP_LINEAR_BASE = {
         }
 };
 
-VIN_DEV_ATTR_EX_S DEV_ATTR_IMX327_MD_BASE = {.enable = 1,
-                                             .path_sel = 0,
-                                             .roi_top = 0,
-                                             .roi_left = 0,
-                                             .roi_width = 1280,
-                                             .roi_height = 640,
-                                             .grid_step = 128,
-                                             .grid_tolerance = 10,
-                                             .threshold = 10,
-                                             .weight_decay = 128,
-                                             .precision = 0};
+VIN_DEV_ATTR_EX_S DEV_ATTR_IMX327_MD_BASE = {
+    .path_sel = 0,
+    .roi_top = 0,
+    .roi_left = 0,
+    .roi_width = 1280,
+    .roi_height = 640,
+    .grid_step = 128,
+    .grid_tolerance = 10,
+    .threshold = 10,
+    .weight_decay = 128,
+    .precision = 0};
 
 VIN_PIPE_ATTR_S PIPE_ATTR_OV10635_YUV_BASE = {
     .ddrOutBufNum = 8,
@@ -1067,7 +1067,12 @@ VIN_PIPE_ATTR_S PIPE_ATTR_OV10635_YUV_BASE = {
     .ispBypassEn = 1,
     .ispAlgoState = 0,
     .bitwidth = 12,
-};
+    .startX = 0,
+    .startY = 0,
+    .calib = {
+        .mode = 0,
+        .lname = NULL,
+    }};
 
 VIN_PIPE_ATTR_S PIPE_ATTR_IMX327_DOL2_BASE = {
     .ddrOutBufNum = 5,
@@ -1083,9 +1088,11 @@ VIN_PIPE_ATTR_S PIPE_ATTR_IMX327_DOL2_BASE = {
     .ispBypassEn = 0,
     .ispAlgoState = 1,
     .bitwidth = 12,
+    .startX = 0,
+    .startY = 12,
     .calib = {
         .mode = 1,
-        .lname = (unsigned char *)("/etc/cam/libimx327_linear.so"),
+        .lname = const_cast<char*>("/etc/cam/libimx327_linear.so"),
     }};
 
 VIN_PIPE_ATTR_S PIPE_ATTR_IMX327_LINEAR_BASE = {
@@ -1102,9 +1109,11 @@ VIN_PIPE_ATTR_S PIPE_ATTR_IMX327_LINEAR_BASE = {
     .ispBypassEn = 0,
     .ispAlgoState = 1,
     .bitwidth = 12,
+    .startX = 0,
+    .startY = 12,
     .calib = {
         .mode = 1,
-        .lname = (unsigned char *)("/etc/cam/libimx327_linear.so"),
+        .lname = const_cast<char*>("/etc/cam/libimx327_linear.so"),
     }};
 
 VIN_PIPE_ATTR_S PIPE_ATTR_AR0233_1080P_BASE = {
@@ -1121,9 +1130,11 @@ VIN_PIPE_ATTR_S PIPE_ATTR_AR0233_1080P_BASE = {
     .ispBypassEn = 0,
     .ispAlgoState = 1,
     .bitwidth = 12,
+    .startX = 0,
+    .startY = 0,
     .calib = {
         .mode = 1,
-        .lname = (unsigned char *)("/etc/cam/lib_ar0233_pwl.so"),
+        .lname = const_cast<char*>("/etc/cam/lib_ar0233_pwl.so"),
     }};
 
 VIN_PIPE_ATTR_S PIPE_ATTR_OS8A10_LINEAR_BASE = {
@@ -1140,9 +1151,11 @@ VIN_PIPE_ATTR_S PIPE_ATTR_OS8A10_LINEAR_BASE = {
     .ispBypassEn = 0,
     .ispAlgoState = 1,
     .bitwidth = 10,
+    .startX = 0,
+    .startY = 0,
     .calib = {
         .mode = 1,
-        .lname = (unsigned char *)("/etc/cam/libos8a10_linear.so"),
+        .lname = const_cast<char*>("/etc/cam/libos8a10_linear.so"),
     }};
 
 VIN_PIPE_ATTR_S PIPE_ATTR_OS8A10_DOL2_BASE = {
@@ -1159,9 +1172,11 @@ VIN_PIPE_ATTR_S PIPE_ATTR_OS8A10_DOL2_BASE = {
     .ispBypassEn = 0,
     .ispAlgoState = 1,
     .bitwidth = 10,
+    .startX = 0,
+    .startY = 0,
     .calib = {
         .mode = 1,
-        .lname = (unsigned char *)("/etc/cam/libos8a10_dol2.so"),
+        .lname = const_cast<char*>("/etc/cam/libos8a10_dol2.so"),
     }};
 
 VIN_PIPE_ATTR_S PIPE_ATTR_S5KGM1SP_LINEAR_BASE = {
@@ -1177,9 +1192,11 @@ VIN_PIPE_ATTR_S PIPE_ATTR_S5KGM1SP_LINEAR_BASE = {
     .ispBypassEn = 0,
     .ispAlgoState = 1,
     .bitwidth = 10,
+    .startX = 0,
+    .startY = 0,
     .calib = {
         .mode = 1,
-        .lname = (unsigned char *)("/etc/cam/s5kgm1sp_linear.so"),
+        .lname = const_cast<char*>("/etc/cam/s5kgm1sp_linear.so"),
     }
 };
 
@@ -1197,7 +1214,12 @@ VIN_PIPE_ATTR_S PIPE_ATTR_TEST_PATTERN_1080P_BASE = {
     .ispBypassEn = 0,
     .ispAlgoState = 1,
     .bitwidth = 12,
-};
+    .startX = 0,
+    .startY = 0,
+    .calib = {
+        .mode = 0,
+        .lname = NULL,
+    }};
 
 VIN_PIPE_ATTR_S PIPE_ATTR_TEST_PATTERN_12M_BASE = {
     .ddrOutBufNum = 8,
@@ -1213,7 +1235,12 @@ VIN_PIPE_ATTR_S PIPE_ATTR_TEST_PATTERN_12M_BASE = {
     .ispBypassEn = 0,
     .ispAlgoState = 1,
     .bitwidth = 12,
-};
+    .startX = 0,
+    .startY = 0,
+    .calib = {
+        .mode = 0,
+        .lname = NULL,
+    }};
 
 VIN_PIPE_ATTR_S PIPE_ATTR_TEST_PATTERN_4K_BASE = {
     .ddrOutBufNum = 8,
@@ -1229,7 +1256,12 @@ VIN_PIPE_ATTR_S PIPE_ATTR_TEST_PATTERN_4K_BASE = {
     .ispBypassEn = 0,
     .ispAlgoState = 0,
     .bitwidth = 10,
-};
+    .startX = 0,
+    .startY = 0,
+    .calib = {
+        .mode = 0,
+        .lname = NULL,
+    }};
 
 VIN_DIS_ATTR_S DIS_ATTR_BASE = {
     .picSize =

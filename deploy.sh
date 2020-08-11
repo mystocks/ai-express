@@ -79,6 +79,7 @@ if [ ${ARCHITECTURE} == "x3" ]
 then
 cp -r ${RELEASE_DIR}/configs/hb* ${RELEASE_DIR}/ssd_test/config/vio_config
 cp -r ${RELEASE_DIR}/configs/vio ${RELEASE_DIR}/ssd_test/config/vio_config
+cp ${ALL_PROJECT_DIR}/output/video_box ${RELEASE_DIR}/ -rf
 fi
 cp -r ${ALL_PROJECT_DIR}/build/bin/ssd_method_test ${RELEASE_DIR}/ssd_test/
 cp -r ${ALL_PROJECT_DIR}/source/solution_zoo/xstream/methods/ssd_method/test/data ${RELEASE_DIR}/ssd_test

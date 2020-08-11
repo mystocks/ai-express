@@ -14,6 +14,7 @@
 #include "CNNMethod/Predictor/Predictor.h"
 #include "CNNMethod/util/CNNMethodData.h"
 #include "CNNMethod/util/ActDataPreprocess.h"
+#include "CNNMethod/CNNConst.h"
 
 namespace xstream {
 
@@ -34,7 +35,7 @@ class LmkSeqInputPredictor : public Predictor {
   bool norm_kps_conf_ = true;
   NormParams norm_params_;
   ActDataPreprocess data_processor_;
-  // float delta_ = 0.0416668;
+  LmkSeqOutputType output_type_;
 };
 }  // namespace xstream
 #endif  // INCLUDE_CNNMETHOD_PREDICTOR_LMKINPUTPREDICTOR_H_

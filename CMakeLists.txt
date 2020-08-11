@@ -61,8 +61,6 @@ elseif (${PLATFORM_X3})
     include_directories(
         deps/x3_prebuilt/include
         deps/x3_prebuilt/include/hbmedia
-        deps/x3_prebuilt/include/vio
-        deps/x3_prebuilt/include/cam
     )
     if (${IOT_VIO_API})
         add_definitions(-DX3_IOT_VIO)
@@ -211,5 +209,8 @@ add_subdirectory(source/solution_zoo/face/)
 add_subdirectory(source/solution_zoo/body/)
 #add_subdirectory(source/solution_zoo/vehicle/)
 add_subdirectory(source/solution_zoo/face_body_multisource/)
+if (${PLATFORM_X3})
+    add_subdirectory(source/solution_zoo/video_box/)
+endif()
 # sample
 add_subdirectory(source/solution_zoo/tools/xwarehouse/)

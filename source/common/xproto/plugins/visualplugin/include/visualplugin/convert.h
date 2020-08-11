@@ -46,10 +46,11 @@ class Convertor {
    * @param out frame_buf - iot_venc_src_buf_t with yuv type
    * @param in vio_msg
    * @param in layer - number
+   * @param in use_vb - if use vb memory or not
    * @return error code
    */
   static int GetYUV(iot_venc_src_buf_t *frame_buf, VioMessage *vio_msg,
-          int level);
+          int level, int use_vb);
 #endif
 
   /**

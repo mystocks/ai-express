@@ -47,6 +47,10 @@ const std::unordered_map<std::string, VioProduce::TSTYPE>
 
 VioConfig *VioConfig::config_ = nullptr;
 
+hobot::vision::BlockingQueue<std::shared_ptr<unsigned char>>
+        UsbCam::nv12_queue_;
+uint64 UsbCam::nv12_queue_len_limit_ = 10;
+
 std::string VioConfig::GetValue(const std::string &key) const {
   std::lock_guard<std::mutex> lk(mutex_);
   if (json_[key].empty()) {
@@ -118,6 +122,9 @@ VioProduce::CreateVioProduce(const std::string &data_source) {
   } else if ("video_feedback_produce" == data_source) {
     Vio_Produce = std::make_shared<VideoFeedbackProduce>(
         json["vio_cfg_file"]["video_feedback_produce"].asCString());
+  } else if ("usb_cam" == data_source) {
+    Vio_Produce = std::make_shared<UsbCam>(
+            json["vio_cfg_file"]["usb_cam"].asCString());
   } else {
     LOGW << "data source " << data_source << " is unsupported";
   }
@@ -393,6 +400,10 @@ bool GetPyramidInfo(VioFeedbackContext *feed_back_context, char *data,
     LOGE << "iot_vio_pyramid_info failed";
     return false;
   }
+  /* use src image addr instead of pym 0 addr, */
+  /* because pym 0-layer not output data in pym offline mode */
+  feed_back_context->pym_img_info.pym[0] = src_img_info->img_addr;
+
   return true;
 }
 
@@ -427,6 +438,10 @@ bool GetPyramidInfo(pym_buffer_t *pvio_image, char *data, int len) {
     LOGE << "iot_vio_pyramid_info failed";
     return false;
   }
+  /* use src image addr instead of pym0 addr, */
+  /* because pym 0-layer not output data in pym offline mode */
+  pvio_image->pym[0] = src_img_info.img_addr;
+
   return true;
 }
 
@@ -1122,6 +1137,241 @@ bool ImageList::FillVIOImageByImagePath(T *pvio_image,
   }
 }
 
+UsbCam::UsbCam(const char *vio_cfg_file) {
+#ifdef X3_X2_VIO
+  auto ret = hb_vio_init(vio_cfg_file);
+HOBOT_CHECK_EQ(ret, 0) << "vio init failed";
+ret = hb_vio_start();
+HOBOT_CHECK_EQ(ret, 0) << "vio start failed";
+#endif
+#ifdef X3_IOT_VIO
+  auto ret = iot_vio_init(vio_cfg_file);
+  HOBOT_CHECK_EQ(ret, 0) << "vio init failed";
+  ret = iot_vio_start();
+  HOBOT_CHECK_EQ(ret, 0) << "vio start failed";
+#endif
+}
+
+int UsbCam::Run() {
+  static uint64_t frame_id = 0;
+  int len = width_ * height_ * 3 / 2;
+
+  if (is_running_)
+    return kHorizonVioErrorAlreadyStart;
+
+  // init uvc
+  std::string dev_name = "/dev/video8";
+  auto json = config_->GetJson();
+  auto dev_name_obj = json["usb_dev_name"];
+  if (!dev_name_obj.isNull()) {
+    dev_name = dev_name_obj.asString();
+  }
+  LOGW << "usb_cam_name:" << dev_name;
+  InitUvc(dev_name);
+
+  is_running_ = true;
+
+  while (is_running_) {
+    std::shared_ptr<unsigned char> nv12_img;
+    if (!nv12_queue_.try_pop(&nv12_img, std::chrono::microseconds(1000))) {
+      continue;
+    }
+
+    // 分配Buffer. 等待Buffer可用
+    while (!AllocBuffer()) {
+      LOGV << "NO VIO_FB_BUFFER";
+      std::this_thread::sleep_for(std::chrono::microseconds(1));
+      // continue;
+      if (!is_running_) {
+        break;
+      }
+    }
+
+    if (cam_type_ == "mono") {  // 单目
+#if defined(X3_X2_VIO) || defined(X3_IOT_VIO)
+      VioFeedbackContext *feedback_context =
+              reinterpret_cast<VioFeedbackContext *>(
+                      std::calloc(1, sizeof(VioFeedbackContext)));
+      std::vector<std::shared_ptr<PymImageFrame>> pym_images;
+      auto ret = GetPyramidInfo(feedback_context,
+                                reinterpret_cast<char*>(nv12_img.get()), len);
+#endif
+      if (ret) {
+        auto pym_image_frame_ptr = std::make_shared<PymImageFrame>();
+#if defined(X3_X2_VIO) || defined(X3_IOT_VIO)
+        Convert(&feedback_context->pym_img_info, *pym_image_frame_ptr);
+        pym_image_frame_ptr->frame_id = frame_id;
+        pym_image_frame_ptr->time_stamp = frame_id++;
+        // set context to feedback_context
+        pym_image_frame_ptr->context =
+                static_cast<void *>(feedback_context);
+#endif
+        pym_images.push_back(pym_image_frame_ptr);
+      } else {
+        std::free(feedback_context);
+        LOGF << "fill vio image failed";
+      }
+      std::shared_ptr<VioMessage> input(
+              new ImageVioMessage(pym_images, 1, ret), [&](ImageVioMessage *p) {
+                  if (p) {
+#if defined(X3_X2_VIO) || defined(X3_IOT_VIO)
+                    p->FreeImage(1);
+#endif
+                    FreeBuffer();
+                    delete p;
+                  }
+                  p = nullptr;
+              });
+      if (push_data_cb_)
+        push_data_cb_(input);
+      LOGD << "Push Image message!!!";
+    } else if (cam_type_ == "dual") {  // 双目
+      // todo
+      LOGF << "Don't support type: " << cam_type_;
+    } else {
+      LOGF << "Don't support type: " << cam_type_;
+      is_running_ = false;
+    }
+  }
+  is_running_ = false;
+  return kHorizonVisionSuccess;
+}
+
+int UsbCam::convert_yuy2_to_nv12(void *in_frame, void *out_frame,
+                                 unsigned int width, unsigned int height)
+{
+  unsigned int i, j, k, tmp;
+  unsigned char *src, *dest;
+
+  if (!in_frame || !out_frame || !width || !height) {
+    LOGE << "some error happen... in_frame:" << in_frame
+         << "  out_frame:" << out_frame
+         << "  width: " << width
+         << "  height:" << height;
+    return -1;
+  }
+
+  src = reinterpret_cast<unsigned char *>(in_frame);
+  dest = reinterpret_cast<unsigned char *>(out_frame);
+
+  /* convert y */
+  for (i = 0, k = 0; i < width * height * 2 && k < width * height;
+       i += 2, k++) {
+    dest[k] = src[i];
+  }
+
+  /* convert u, v */
+  for (j = 0, k = width * height; j < height && k < width * height * 3 / 2;
+       j += 2) {        /* 4:2:0, 1/2 u&v */
+    for (i = 1; i < width * 2; i += 2) {
+      tmp = i + j * width * 2;
+      dest[k++] = src[tmp];
+    }
+  }
+
+  return 0;
+}
+
+void UsbCam::got_frame_handler(struct video_frame *frame, void *user_args)
+{
+  if (!frame || !frame->mem || !user_args || frame->length < 0)
+    return;
+  LOGD << "got frame formate:" << fcc_format_to_string(frame->fcc)
+       << " w:" << frame->width
+       << " h:" << frame->height
+       << " len:" << frame->length;
+
+  if (frame->fcc == FCC_YUY2) {
+    int dest_size = frame->width * frame->height * 3 / 2;
+    unsigned char *dest =
+            reinterpret_cast<unsigned char *>(calloc(1, dest_size));
+    assert(dest != NULL);
+    if (convert_yuy2_to_nv12(frame->mem, dest, frame->width,
+                             frame->height) < 0) {
+      LOGE << "convert data from yuy2 to nv12 failed...";
+      return;
+    }
+
+    auto sp_nv12 = std::shared_ptr<unsigned char>(dest, [](unsigned char* p){
+        if (p) {
+          free(p);
+          p = NULL;
+        }
+    });
+    nv12_queue_.push(sp_nv12);
+    if (nv12_queue_.size() > nv12_queue_len_limit_) {
+      LOGE << "nv12 queue size " << nv12_queue_.size()
+           << " exceeds limit " << nv12_queue_len_limit_;
+      nv12_queue_.pop();
+    }
+  } else if (frame->fcc == FCC_MJPEG) {
+    // todo do not support
+    /* dump video frame to file */
+//    static int count = 0;
+//    std::string fname("dump_" + std::to_string(count++) + ".jpg");
+//    LOGW << "dump fname:" << fname;
+//    std::ofstream ofs(fname);
+//    ofs.write((const char*)frame->mem, frame->length);
+  }
+
+  return;
+}
+
+int UsbCam::InitUvc(std::string dev_name) {
+  format_enums fmt_enums;
+  // std::string v4l2_devname = "/dev/video8";
+  std::string v4l2_devname = dev_name;
+  int r;
+
+  cam = camera_open(v4l2_devname.data());
+  if (!cam) {
+    LOGE << "camera_open failed";
+    return -1;
+  }
+
+  r = camera_enum_format(cam, &fmt_enums, 0);
+  if (r < 0) {
+    LOGE << "camera enum format failed";
+    camera_close(cam);
+    return r;
+  }
+  camera_show_format(cam);
+
+  camera_param_t params;
+  params.fcc = FCC_YUY2;
+  params.width = 1920;
+  params.height = 1080;
+  params.fps = 30;
+
+  r = camera_set_params(cam, &params);
+  if (r < 0) {
+    LOGE << "camera set format failed";
+    camera_close(cam);
+    return r;
+  }
+
+  int user_args = 1;
+  r = camera_start_streaming(cam, got_frame_handler, &user_args);
+  if (r < 0) {
+    LOGE << "camera start streaming failed";
+    camera_close(cam);
+    return r;
+  }
+
+  return 0;
+}
+
+int UsbCam::DeInitUvc() {
+  if (!cam) {
+    return -1;
+  }
+
+  if (camera_stop_streaming(cam) < 0) {
+    LOGE << "camera stop streaming failed";
+  }
+  camera_close(cam);
+  return 0;
+}
 }  // namespace vioplugin
 }  // namespace xproto
 }  // namespace vision

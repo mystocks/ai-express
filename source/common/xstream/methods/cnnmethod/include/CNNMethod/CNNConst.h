@@ -33,7 +33,8 @@ enum class PostFun {
   CLASSIFY,
   ACT_DET,
   BACK_BONE,
-  VID
+  VID,
+  COMMON_LMK
 };
 
 enum class NormMethod {
@@ -50,6 +51,11 @@ enum class NormMethod {
   BPU_MODEL_NORM_BY_NOTHING
 };
 
+enum class LmkSeqOutputType {
+  FALL,
+  GESTURE
+};
+
 enum class FilterMethod { OUT_OF_RANGE, NO_FILTER };
 
 extern const std::map<std::string, InputType> g_input_type_map;
@@ -59,6 +65,8 @@ extern const std::map<std::string, PostFun> g_post_fun_map;
 extern const std::map<std::string, NormMethod> g_norm_method_map;
 
 extern const std::map<std::string, FilterMethod> g_filter_method_map;
+
+extern const std::map<std::string, LmkSeqOutputType> g_lmkseq_output_map;
 
 extern const std::vector<float> g_lmk_template;
 

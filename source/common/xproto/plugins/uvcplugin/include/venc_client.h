@@ -9,28 +9,29 @@
  */
 #ifndef INCLUDE_UVCPLUGIN_VENC_CLIENT_H_
 #define INCLUDE_UVCPLUGIN_VENC_CLIENT_H_
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <getopt.h>
 //#include <pthread.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <sys/time.h>
-#include <thread>
-#include <signal.h>
-#include <fcntl.h>
 #include <ctype.h>
-#include "hb_vio_interface.h"
-#include "hb_vps_api.h"
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <time.h>
+
+#include <thread>
 
 #include "hb_comm_venc.h"
-#include "hb_venc.h"
 #include "hb_vdec.h"
+#include "hb_venc.h"
+#include "hb_vio_interface.h"
+#include "hb_vps_api.h"
 #include "usb_common.h"
-#include "video_queue.h"
 #include "uvc_server.h"
+#include "video_queue.h"
 
 namespace horizon {
 namespace vision {
@@ -43,13 +44,12 @@ class VencClient {
   ~VencClient();
   int Init(int width, int height, UvcConfig::VideoType type);
   int Start();
-  int DeInit();
   int Stop();
 
  private:
   void VencToUvcThread(void *vencpram);
   int VencChnAttrInit(VENC_CHN_ATTR_S *pVencChnAttr, PAYLOAD_TYPE_E p_enType,
-            int p_Width, int p_Height, PIXEL_FORMAT_E pixFmt);
+                      int p_Width, int p_Height, PIXEL_FORMAT_E pixFmt);
   int VencCommonInit();
   int VencCommonDeinit();
   int VencInit(int VeChn, int type, int width, int height, int bits);
@@ -62,6 +62,7 @@ class VencClient {
   int g_exit;
   std::shared_ptr<std::thread> venc_pid_;
   vencParam venc_param_;
+  VIDEO_STREAM_S h264_sps_frame_;
 };
 }  // namespace Uvcplugin
 }  // namespace xproto

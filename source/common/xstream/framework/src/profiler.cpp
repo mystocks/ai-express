@@ -38,7 +38,7 @@ static std::vector<std::string> split(const std::string &str, char delim) {
 
 int TimeStatisticInfo::cycle_ms = 3000;
 
-int FpsStatisticInfo::cycle_ms = 10;
+int FpsStatisticInfo::cycle_ms = 200 * 1000;
 
 ProfilerPtr Profiler::instance_;
 
@@ -63,11 +63,13 @@ ProfilerPtr Profiler::Get() {
 // }
 
 Profiler::~Profiler() {
+  LOGD << "~Profiler() Start";
   std::lock_guard<std::mutex> lock(lock_);
 
   Json::Value array_config;
 
   if (!foi_.is_open()) {
+    LOGD << "~Profiler() End";
     return;
   }
   std::string line;
@@ -105,6 +107,7 @@ Profiler::~Profiler() {
   if (foi_.is_open()) {
     foi_.close();
   }
+  LOGD << "~Profiler() End";
 }
 
 void Profiler::Log(const std::stringstream &ss) {

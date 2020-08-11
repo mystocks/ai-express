@@ -6,8 +6,11 @@
 #ifndef __HB_VPS_API_H
 #define __HB_VPS_API_H
 
-#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#include <stdint.h>
 
 #if 0
 #define HB_ERR_VPS_INVALID_GROUPID			-1
@@ -39,7 +42,16 @@ enum HB_VPS_ERR_E {
 	HB_ERR_VPS_SET_AT_WRONG_TIME,
 	HB_ERR_VPS_UN_SUPPORT_SIZE,
 	HB_ERR_VPS_FRAME_UNEXIST,
-	HB_ERR_VPS_DEV_FRAME_DROP
+	HB_ERR_VPS_DEV_FRAME_DROP,
+	/* pym layer error: */
+	HB_ERR_VPS_LAYER_UNEXIST,
+	HB_ERR_VPS_LAYER_PYM_NOT_READY,
+	HB_ERR_VPS_LAYER_LG_DSUS_LAYER_EN,
+	HB_ERR_VPS_LAYER_ENTITY_INIT,
+	HB_ERR_VPS_LAYER_DISABLE,
+	HB_ERR_VPS_LAYER_GET_BIND_OTHER_DEV,
+	HB_ERR_VPS_LAYER_GET_FRM_DONE_NULL,
+	HB_ERR_VPS_LAYER_OUT_BUF_MGR_NULL
 };
 
 typedef enum HB_PYM_LAYER_ID_E
@@ -120,6 +132,12 @@ typedef enum HB_ROTATION_E {
 	ROTATION_270
 } ROTATION_E;
 
+typedef struct HB_VPS_DYNAMIC_SRC_INFO_S {
+	uint8_t 		src_change_en;
+	uint16_t 		new_width;
+	uint16_t 		new_height;
+} DYNAMIC_SRC_INFO_S;
+
 typedef struct HB_PYM_SCALE_INFO_S {
 	uint8_t			factor;
 	uint16_t		roi_x;
@@ -136,6 +154,7 @@ typedef struct HB_VPS_PYM_CHN_ATTR_S {
 	uint8_t			us_uv_bypass;
 	int				timeout;
 	uint32_t		frameDepth;
+	DYNAMIC_SRC_INFO_S	dynamic_src_info;
 	#define			MAX_PYM_DS_NUM			24
 	#define			MAX_PYM_US_NUM			6
 	PYM_SCALE_INFO_S ds_info[MAX_PYM_DS_NUM];
@@ -224,5 +243,9 @@ int HB_VPS_ReleaseLayerFrame(int VpsGrp, PYM_LAYER_ID_E Layer,
 // int HB_VPS_TriggerSnapFrame(int VpsGrp, int VpsChn, uint32_t frameCnt);
 
 // int HB_VPS_SetRoiInfo(int VpsGrp, DIS_MV_INFO_S *mv_info);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // __HB_VPS_API_H

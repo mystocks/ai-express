@@ -8,10 +8,10 @@ set(SOURCE_FILES
 
 add_executable(face_solution ${SOURCE_FILES})
 
-set(BASE_LIBRARIES vioplugin smartplugin visualplugin
+set(BASE_LIBRARIES smartplugin visualplugin
         FasterRCNNMethod bpu_predict SnapShotMethod GradingMethod vote_method
         MOTMethod ipc_tracking xstream-framework xstream-imagetools hobotlog
-        jsoncpp opencv_world websocketplugin)
+        jsoncpp opencv_world websocketplugin vioplugin)
 if (${PLATFORM_X2})
 set(UVC_LIBRARIES )
 endif()

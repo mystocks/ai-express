@@ -1,7 +1,7 @@
 {
   "cam_type": "mono",
   "data_source": "panel_camera",
-  "max_vio_buffer": 1,
+  "max_vio_buffer": 2,
   "ts_type": "frame_id",
   "file_path": "name.list",
   "pad_width": 1920,

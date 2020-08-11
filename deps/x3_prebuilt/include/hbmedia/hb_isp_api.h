@@ -2,6 +2,7 @@
 #define __HB_ISP_H__
 
 #include <stdint.h>
+#include "hb_isp_algo.h"
 
 // ------------------------------------------------------------------------------ //
 //		VALUE LIST
@@ -77,6 +78,8 @@ extern int HB_ISP_GetModuleControl(uint8_t pipeId, ISP_MODULE_CTRL_U *punModCtrl
 extern int HB_ISP_SetRegister(uint8_t pipeId, uint32_t u32Addr, uint32_t u32Value);
 extern int HB_ISP_GetRegister(uint8_t pipeId, uint32_t u32Addr, uint32_t *pu32Value);
 
+extern int HB_ISP_SwitchScence(uint8_t pipeId, const char *cname);
+
 /*****************************************************************************************
  *				  3ALib Register API			 	 	 *
  *****************************************************************************************/
@@ -109,6 +112,9 @@ typedef struct _ae_acamera_output_ {
 	int32_t exposure_log2;
 	uint32_t exposure_ratio;
 	uint8_t ae_converged;
+	uint16_t sensor_ctrl_enable;
+	ae_out_info_t ae_out_info;
+	ae_1024bin_weight_t ae_1024bin_weight;
 } ae_acamera_output_t; 
 
 typedef struct HB_ISP_AE_FUNC_S {

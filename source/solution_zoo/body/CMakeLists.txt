@@ -15,9 +15,9 @@ set(BASE_LIBRARIES vioplugin smartplugin visualplugin  FasterRCNNMethod CNNMetho
 endif()
 
 if (${PLATFORM_X3})
-set(BASE_LIBRARIES vioplugin smartplugin visualplugin uvcplugin FasterRCNNMethod CNNMethod
+set(BASE_LIBRARIES  smartplugin visualplugin  FasterRCNNMethod
         MOTMethod FilterMethod MergeMethod vote_method BehaviorMethod bpu_predict ipc_tracking xstream-framework
-        xstream-imagetools hobotlog vision_type_util jsoncpp opencv_world websocketplugin)
+        xstream-imagetools hobotlog vision_type_util jsoncpp opencv_world websocketplugin uvcplugin vioplugin)
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${BASE_LIBRARIES})

@@ -11,17 +11,18 @@
 #define INCLUDE_UVCPLUGIN_UVCPLUGIN_H_
 #include <memory>
 #include <string>
-#include <vector>
 #include <thread>
-#include "uvc/uvc.h"
-#include "usb_common.h"
-#include "uvc/uvc_gadget.h"
-#include "venc_client.h"
-#include "uvc_server.h"
+#include <vector>
+
 #include "./hid_manager.h"
+#include "./usb_common.h"
+#include "uvc/uvc.h"
+#include "uvc/uvc_gadget.h"
+#include "./uvc_server.h"
+#include "./uvcplugin_config.h"
+#include "./venc_client.h"
 #include "xproto/message/pluginflow/flowmsg.h"
 #include "xproto/plugin/xpluginasync.h"
-#include "uvcplugin_config.h"
 
 namespace horizon {
 namespace vision {
@@ -38,6 +39,7 @@ class UvcPlugin : public xproto::XPluginAsync {
   int Init() override;
   int Start() override;
   int Stop() override;
+  std::string desc() const { return "uvcPlugin"; }
 
  private:
   int FeedVideo(XProtoMessagePtr msg);
@@ -58,6 +60,12 @@ class UvcPlugin : public xproto::XPluginAsync {
   std::shared_ptr<UvcConfig> config_;
 
   std::shared_ptr<HidManager> hid_manager_;
+
+  int origin_image_width_ = 1920;  // update by FeedVideo
+  int origin_image_height_ = 1080;
+  int dst_image_width_ = 1920;  // update by FeedVideo
+  int dst_image_height_ = 1080;
+  VIDEO_STREAM_S h264_sps_frame_;
 };
 }  // namespace Uvcplugin
 }  // namespace xproto

@@ -80,6 +80,12 @@ class Profiler : public std::enable_shared_from_this<Profiler> {
   enum class State { kNotRunning = 0, kRunning };
 
   static ProfilerPtr Get();
+  static ProfilerPtr Release() {
+    if (instance_) {
+      instance_ = nullptr;
+    }
+    return instance_;
+  }
   inline bool IsRunning() const { return state_ == State::kRunning; }
 
   void Log(const std::stringstream &ss);

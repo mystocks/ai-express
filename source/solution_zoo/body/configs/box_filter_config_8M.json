@@ -1,12 +1,12 @@
 {
     "image_width": 3840,
     "image_height": 2160,
-    "face_size_thr": 42,
-    "head_size_thr": 42,
+    "face_size_thr": 15,
+    "head_size_thr": 15,
     "body_size_thr": 42,
-    "face_pv_thr": 0.58,
-    "head_pv_thr": 0.58,
-    "body_pv_thr": 0.58,
+    "face_pv_thr": 0.9,
+    "head_pv_thr": 0.9,
+    "body_pv_thr": 0.9,
     "face_expand_scale": 1.0,
     "head_expand_scale": 1.0,
     "body_expand_scale": 1.0,
@@ -17,8 +17,8 @@
     "frontal_roll_thr": 0,
     "frontal_thr": 1000,
     "quality_thr": 0.5,
-    "lmk_thr": 0.5,
-    "lmk_filter_num": 12,
+    "lmk_thr": 0.6,
+    "lmk_filter_num": 10,
     "bound_thr_w": 10,
     "bound_thr_h": 10,
     "black_area_iou_thr": 0.5,
@@ -62,6 +62,11 @@
       {
         "name": "body_box",
         "type": "bbox",
+        "group": "body"
+      },
+      {
+        "name": "landmark",
+        "type": "landmark",
         "group": "body"
       }
     ],

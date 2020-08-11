@@ -49,6 +49,7 @@ set(SOURCE_FILES
     src/PostPredictor/ActPostPredictor.cpp
     src/PostPredictor/BackbonePostPredictor.cpp
     src/PostPredictor/VidPostPredictor.cpp
+    src/PostPredictor/CommonLmkPostPredictor.cpp
     include/CNNMethod/CNNMethod.h
     include/CNNMethod/CNNConst.h
     include/CNNMethod/util/util.h
@@ -80,6 +81,7 @@ set(SOURCE_FILES
     include/CNNMethod/PostPredictor/ActPostPredictor.h
     include/CNNMethod/PostPredictor/BackbonePostPredictor.h
     include/CNNMethod/PostPredictor/VidPostPredictor.h
+    include/CNNMethod/PostPredictor/CommonLmkPostPredictor.h
 )
 
 include_directories(${PROJECT_SOURCE_DIR}/include)

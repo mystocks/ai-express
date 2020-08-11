@@ -10,5 +10,6 @@
   "packet_size": 102400,
   "frame_buf_depth": 5,
   "dump_jpg_num": 0,
+  "jpg_encode_time": 0,
   "jpeg_quality": 50
 }

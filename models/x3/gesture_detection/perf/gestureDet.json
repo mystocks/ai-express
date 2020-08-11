@@ -1,0 +1,73 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 11506688,
+        "BPU OPs per frame (working)": 58682368,
+        "BPU OPs per run (effective)": 11506688,
+        "BPU OPs per run (working)": 58682368,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI2",
+        "BPU utilization (effective)": 0.077,
+        "BPU utilization (working)": 0.391,
+        "DDR bytes per frame": 2451552,
+        "DDR bytes per run": 2451552,
+        "DDR bytes per second": 8358855459,
+        "DDR megabytes per frame": 2.338,
+        "DDR megabytes per run": 2.338,
+        "DDR megabytes per second": 7971.6,
+        "FPS": 3409.62,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli2 -m /gpfs/plat_aidi/model/2531/IntInference/act_kps_x2_infer-symbol.json -p /gpfs/plat_aidi/model/2531/IntInference/act_kps_x2_infer-0020.params -s 1x32x21x3 -i ddr --O2 -o gestureDet.hbm",
+        "frame per run": 1,
+        "frame per second": 3409.62,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "input_quanti__output",
+                "1x32x21x3"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.616,
+            0.612,
+            0.379,
+            0.298,
+            0.248,
+            0.138
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            5700,
+            7651,
+            7482,
+            8901,
+            8607,
+            7672
+        ],
+        "interval number": 6,
+        "interval storing bandwidth (megabytes/s)": [
+            351,
+            78,
+            195,
+            39,
+            78,
+            0
+        ],
+        "interval time (ms)": 0.05,
+        "latency (ms)": 0.3,
+        "latency (us)": 293.3,
+        "loaded bytes per frame": 2412608,
+        "loaded bytes per run": 2412608,
+        "model json CRC": "56dc1d34",
+        "model json file": "/gpfs/plat_aidi/model/2531/IntInference/act_kps_x2_infer-symbol.json",
+        "model name": "gestureDet",
+        "model param CRC": "93805ff2",
+        "model param file": "/gpfs/plat_aidi/model/2531/IntInference/act_kps_x2_infer-0020.params",
+        "run per second": 3409.62,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 38944,
+        "stored bytes per run": 38944
+    }
+}

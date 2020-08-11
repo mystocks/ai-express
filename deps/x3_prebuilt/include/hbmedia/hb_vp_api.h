@@ -13,6 +13,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 // #include <stdint.h>
+#include "ion.h"
 
 #define VP_MAX_PUB_POOLS 16 
 
@@ -29,11 +30,11 @@ extern "C" {
 typedef struct HB_VP_POOL_CONFIG_S {
     uint64_t u64BlkSize;
     uint32_t u32BlkCnt;
+    uint32_t cacheEnable;
 } VP_POOL_CONFIG_S;
 
 typedef struct HB_VP_CONFIG_S {
     uint32_t u32MaxPoolCnt;
-    uint32_t cacheEnable;
     VP_POOL_CONFIG_S pubPool[VP_MAX_PUB_POOLS];
 } VP_CONFIG_S;
 
@@ -61,7 +62,10 @@ int HB_VP_SetAuxiliaryConfig
                     (const VP_AUXILIARY_CONFIG_S *pstAuxiliaryConfig);
 int HB_VP_DmaCopy(void *dstPaddr, void *srcPaddr, uint32_t len);
 int HB_SYS_Alloc(uint64_t *pu64PhyAddr, void **ppVirAddr, uint32_t u32Len);
+int HB_SYS_AllocCached(uint64_t *pu64PhyAddr, void **ppVirAddr, uint32_t u32Len);
 int HB_SYS_Free(uint64_t u64PhyAddr, void *pVirAddr);
+int HB_SYS_CacheInvalidate(uint64_t pu64PhyAddr, void *pVirAddr, uint32_t u32Len);
+int HB_SYS_CacheFlush(uint64_t pu64PhyAddr, void *pVirAddr, uint32_t u32Len);
 
 #ifdef __cplusplus
 #if __cplusplus

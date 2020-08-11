@@ -20,6 +20,7 @@
 #include "horizon/vision_type/vision_type.h"
 #include "horizon/vision_type/vision_type.hpp"
 #include "xproto/message/pluginflow/flowmsg.h"
+#include "xproto/utils/profile.h"
 
 namespace horizon {
 namespace vision {
@@ -30,11 +31,17 @@ namespace basic_msgtype {
 #define TYPE_DROP_MESSAGE "XPLUGIN_DROP_MESSAGE"
 #define TYPE_DROP_IMAGE_MESSAGE "XPLUGIN_DROP_IMAGE_MESSAGE"
 
+using horizon::vision::xproto::MsgScopeProfile;
+
 struct VioMessage : public XProtoMessage {
  public:
-  VioMessage() { type_ = TYPE_IMAGE_MESSAGE; };
+  VioMessage() {
+    type_ = TYPE_IMAGE_MESSAGE;
+    profile_ = std::make_shared<MsgScopeProfile>(type_);
+  }
   virtual ~VioMessage() = default;
 
+  int channel_ = -1;
   // image frames number
   uint32_t num_ = 0;
   // sequence id, would increment automatically
@@ -57,6 +64,7 @@ struct VioMessage : public XProtoMessage {
 #ifdef X3
   std::vector<std::shared_ptr<hobot::vision::PymImageFrame>> image_;
 #endif
+  std::shared_ptr<MsgScopeProfile> profile_;
 };
 
 }  // namespace basic_msgtype

@@ -22,6 +22,7 @@
 #include "CNNMethod/CNNMethod.h"
 #include "CNNMethod/util/ModelInfo.h"
 #include "CNNMethod/util/util.h"
+#include "CNNMethod/CNNConst.h"
 #include "hobotxstream/method.h"
 #include "hobotxstream/method_factory.h"
 #include "hobotxsdk/xstream_sdk.h"
@@ -269,7 +270,8 @@ int CNNMethodForLmkInput(std::string cfg_file,
 
 int CNNMethodForDDRInput(std::string box_file,
                          std::string kps_file,
-                         std::string cfg_file) {
+                         std::string cfg_file,
+                         xstream::LmkSeqOutputType type) {
   xstream::CNNMethod cnn_method;
   cnn_method.Init(cfg_file);
 
@@ -281,7 +283,14 @@ int CNNMethodForDDRInput(std::string box_file,
     std::istringstream kps_vals(line2);
     auto xstream_roi = std::make_shared<xstream::XStreamData<BBox>>();
     auto xstream_landmark = std::make_shared<xstream::XStreamData<Landmarks>>();
-    xstream_landmark->value.values.resize(17);
+    if (type == xstream::LmkSeqOutputType::FALL) {
+      xstream_landmark->value.values.resize(17);
+    } else if (type == xstream::LmkSeqOutputType::GESTURE) {
+      xstream_landmark->value.values.resize(21);
+    } else {
+      LOGE << "unsupported output type";
+      return -1;
+    }
     box_vals >> xstream_roi->value.x1 >> xstream_roi->value.y1
              >> xstream_roi->value.x2 >> xstream_roi->value.y2
              >> xstream_roi->value.score;
@@ -305,12 +314,12 @@ int CNNMethodForDDRInput(std::string box_file,
     std::vector<std::vector<BaseDataPtr>> xstream_output =
         cnn_method.DoProcess(input, param);
     auto cnn_output = xstream_output[0];
-    auto fall_chances =
+    auto act_rets =
         std::static_pointer_cast<xstream::BaseDataVector>(cnn_output[0]);
-    auto fall_chance = std::static_pointer_cast<
+    auto act_ret = std::static_pointer_cast<
         xstream::XStreamData<
-            hobot::vision::Attribute<float>>>(fall_chances->datas_[0]);
-    LOGD << fall_chance->value.value;
+            hobot::vision::Attribute<int>>>(act_rets->datas_[0]);
+    LOGD << act_ret->value.value << ", " << act_ret->value.score;
   }
 
   cnn_method.Finalize();
@@ -460,9 +469,12 @@ TEST(CNN_TEST, LmkPose) {
   #ifdef X2
   fb_cfg ="./config/vio_config/vio_onsemi0230_fb.json";
   #endif
-  #ifdef X3
-  fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
-  #endif
+#ifdef X3_X2_VIO
+  fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
   std::string img_list = "./data/rect_cnn/pose_lmk/lmk_label.txt";
 
   int ret = CNNMethodForRoiInput(cfg_file, fb_cfg, img_list);
@@ -475,9 +487,12 @@ TEST(CNN_TEST, AntiSpf) {
   #ifdef X2
   fb_cfg ="./config/vio_config/vio_onsemi0230_fb.json";
   #endif
-  #ifdef X3
-  fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
-  #endif
+#ifdef X3_X2_VIO
+  fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
   std::string img_list = "./data/rect_cnn/anti_spf/img_lst.txt";
 
   int ret = CNNMethodForRoiInput(cfg_file, fb_cfg, img_list);
@@ -490,9 +505,12 @@ TEST(CNN_TEST, AgeGender) {
   #ifdef X2
   fb_cfg ="./config/vio_config/vio_onsemi0230_fb.json";
   #endif
-  #ifdef X3
-  fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
-  #endif
+#ifdef X3_X2_VIO
+  fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
   std::string img_list = "./data/rect_cnn/pose_lmk/lmk_label.txt";
 
   int ret = CNNMethodForRoiInput(cfg_file, fb_cfg, img_list);
@@ -504,9 +522,12 @@ TEST(CNN_TEST, Mask) {
   #ifdef X2
   std::string fb_cfg = "./config/vio_config/vio_onsemi0230_fb.json";
   #endif
-  #ifdef X3
-  std::string fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
-  #endif
+#ifdef X3_X2_VIO
+  std::string fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  std::string fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
   std::string img_list = "./data/rect_cnn/pose_lmk/lmk_label.txt";
 
   int ret = CNNMethodForRoiInput(cfg_file, fb_cfg, img_list);
@@ -519,9 +540,12 @@ TEST(CNN_TEST, FaceQuality) {
   #ifdef X2
   fb_cfg ="./config/vio_config/vio_onsemi0230_fb.json";
   #endif
-  #ifdef X3
-  fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
-  #endif
+#ifdef X3_X2_VIO
+  fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
   std::string img_list = "./data/rect_cnn/pose_lmk/lmk_label.txt";
 
   int ret = CNNMethodForRoiInput(cfg_file, fb_cfg, img_list);
@@ -542,9 +566,12 @@ TEST(CNN_TEST, VehicleColor) {
   #ifdef X2
   fb_cfg ="./config/vio_config/vio_onsemi0230_fb.json";
   #endif
-  #ifdef X3
-  fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
-  #endif
+#ifdef X3_X2_VIO
+  fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
   std::string img_list = "./data/rect_cnn/vehicle/img_lst.txt";
 
   int ret = CNNMethodForRoiInput(cfg_file, fb_cfg, img_list);
@@ -557,9 +584,12 @@ TEST(CNN_TEST, VehicleType) {
   #ifdef X2
   fb_cfg ="./config/vio_config/vio_onsemi0230_fb.json";
   #endif
-  #ifdef X3
-  fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
-  #endif
+#ifdef X3_X2_VIO
+  fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
   std::string img_list = "./data/rect_cnn/vehicle/img_lst.txt";
 
   int ret = CNNMethodForRoiInput(cfg_file, fb_cfg, img_list);
@@ -572,9 +602,12 @@ TEST(CNN_TEST, PlateNum) {
   #ifdef X2
   fb_cfg ="./config/vio_config/vio_onsemi0230_fb.json";
   #endif
-  #ifdef X3
-  fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
-  #endif
+#ifdef X3_X2_VIO
+  fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
   std::string img_list = "./data/rect_cnn/platenum/platenum.txt";
 
   int ret = CNNMethodForRoiInput(cfg_file, fb_cfg, img_list);
@@ -587,9 +620,12 @@ TEST(CNN_TEST, PlateNumClassify) {
   #ifdef X2
   fb_cfg ="./config/vio_config/vio_onsemi0230_fb.json";
   #endif
-  #ifdef X3
-  fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
-  #endif
+#ifdef X3_X2_VIO
+  fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
   std::string img_list = "./data/rect_cnn/pose_lmk/lmk_label.txt";
 
   int ret = CNNMethodForRoiInput(cfg_file, fb_cfg, img_list);
@@ -600,7 +636,17 @@ TEST(DDR_TEST, FallDet) {
   std::string box_file = "./data/fall_cnn/boxes.txt";
   std::string kps_file = "./data/fall_cnn/kpses.txt";
   std::string cfg_file = "./config/method_conf/fall_det.json";
-  int ret = CNNMethodForDDRInput(box_file, kps_file, cfg_file);
+  int ret = CNNMethodForDDRInput(box_file, kps_file, cfg_file,
+                                 xstream::LmkSeqOutputType::FALL);
+  EXPECT_EQ(ret, 0);
+}
+
+TEST(DDR_TEST, GestureRecog) {
+  std::string box_file = "./data/gesture_cnn/hand_boxes.txt";
+  std::string kps_file = "./data/gesture_cnn/hand_kpses.txt";
+  std::string cfg_file = "./config/method_conf/gesture_det.json";
+  int ret = CNNMethodForDDRInput(box_file, kps_file, cfg_file,
+                                 xstream::LmkSeqOutputType::GESTURE);
   EXPECT_EQ(ret, 0);
 }
 
@@ -638,11 +684,124 @@ TEST(CNN_TEST, testXBoxAction) {
 #ifdef X2
   std::string fb_cfg = "./config/vio_config/vio_onsemi0230_fb.json";
 #endif
-#ifdef X3
-  std::string fb_cfg = "./config/vio_config/x3dev/hb_vio_x3_1080_fb.json";
+#ifdef X3_X2_VIO
+  std::string fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  std::string fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
 #endif
   std::string img_list = "./data/xbox_cnn/xbox_cnn_list.txt";
 
   int ret = CNNMethodForvitest(cfg_file, fb_cfg, img_list);
   EXPECT_EQ(ret, 0);
 }
+
+int CNNMethodForHandLmk(std::string cfg_file, std::string fb_cfg) {
+  xstream::XStreamSDK *flow = xstream::XStreamSDK::CreateSDK();
+  std::cout << cfg_file << std::endl;
+  int ret = flow->SetConfig("config_file", cfg_file.c_str());
+  if (ret != 0) return -1;
+  ret = flow->Init();
+  if (ret != 0) return -1;
+
+  auto create_fake_nv12 = [&](int width, int height, cv::Mat &img_nv12) {
+    img_nv12 = cv::Mat(height * 3 / 2, width, CV_8UC1);
+    uint8_t *nv12 = img_nv12.ptr<uint8_t>();
+    memset(nv12, 0x5, width * height * 3 / 2);
+  };
+  SetLogLevel(HOBOT_LOG_DEBUG);
+#ifdef X2
+  img_info_t feed_back_info;
+  HbVioFbWrapper fb_handle(fb_cfg);
+  ret = fb_handle.Init();
+  if (ret != 0) return -1;
+
+  auto xstream_rois = std::make_shared<xstream::BaseDataVector>();
+  xstream_rois->name_ = "hand_box";
+  auto xstream_roi =
+      std::make_shared<xstream::XStreamData<hobot::vision::BBox>>();
+  xstream_roi->value.x1 = 0;
+  xstream_roi->value.y1 = 0;
+  xstream_roi->value.x2 = 128;
+  xstream_roi->value.y2 = 128;
+  xstream_rois->datas_.push_back(xstream_roi);
+
+  cv::Mat img_nv12;
+  int width = 1920;
+  int height = 1080;
+  create_fake_nv12(width, height, img_nv12);
+  fb_handle.GetImgInfo(img_nv12.data, width, height, &feed_back_info);
+
+  auto py_img = std::make_shared<hobot::vision::PymImageFrame>();
+  py_img->img = feed_back_info;
+  auto xstream_data = std::make_shared<xstream::XStreamData<ImageFramePtr>>();
+  xstream_data->value =
+      std::static_pointer_cast<hobot::vision::ImageFrame>(py_img);
+  xstream_data->name_ = "pyramid";
+
+  xstream::InputDataPtr inputdata(new xstream::InputData());
+  inputdata->datas_.push_back(
+      std::static_pointer_cast<xstream::BaseData>(xstream_rois));
+  inputdata->datas_.push_back(
+      std::static_pointer_cast<xstream::BaseData>(xstream_data));
+
+  auto out = flow->SyncPredict(inputdata);
+  std::cout << out->datas_.size() << std::endl;
+  fb_handle.FreeImgInfo(&feed_back_info);
+#endif
+#ifdef X3
+  HbVioFbWrapperGlobal fb_handle(fb_cfg);
+  ret = fb_handle.Init();
+  if (ret != 0) return -1;
+
+  auto xstream_rois = std::make_shared<xstream::BaseDataVector>();
+  xstream_rois->name_ = "hand_box";
+  auto xstream_roi =
+      std::make_shared<xstream::XStreamData<hobot::vision::BBox>>();
+  xstream_roi->value.x1 = 0;
+  xstream_roi->value.y1 = 0;
+  xstream_roi->value.x2 = 128;
+  xstream_roi->value.y2 = 128;
+  xstream_rois->datas_.push_back(xstream_roi);
+
+  cv::Mat img_nv12;
+  int width = 1920;
+  int height = 1080;
+  create_fake_nv12(width, height, img_nv12);
+  auto py_image_frame_ptr = fb_handle.GetImgInfo(img_nv12.data, width, height);
+  std::cout << "py_img = " << py_image_frame_ptr << std::endl;
+  auto xstream_data = std::make_shared<xstream::XStreamData<ImageFramePtr>>();
+  xstream_data->value =
+      std::static_pointer_cast<hobot::vision::ImageFrame>(py_image_frame_ptr);
+  xstream_data->name_ = "pyramid";
+
+  xstream::InputDataPtr inputdata(new xstream::InputData());
+  inputdata->datas_.push_back(
+      std::static_pointer_cast<xstream::BaseData>(xstream_rois));
+  inputdata->datas_.push_back(
+      std::static_pointer_cast<xstream::BaseData>(xstream_data));
+
+  auto out = flow->SyncPredict(inputdata);
+  std::cout << out->datas_.size() << std::endl;
+  fb_handle.FreeImgInfo(py_image_frame_ptr);
+#endif
+  delete flow;
+  return 0;
+}
+
+TEST(CNN_TEST, testHandLmk) {
+  std::string cfg_file = "./config/cnn_handLmk.json";
+#ifdef X2
+  std::string fb_cfg = "./config/vio_config/vio_onsemi0230_fb.json";
+#endif
+#ifdef X3_X2_VIO
+  std::string fb_cfg = "./config/vio_config/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  std::string fb_cfg = "./config/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
+
+  int ret = CNNMethodForHandLmk(cfg_file, fb_cfg);
+  EXPECT_EQ(ret, 0);
+}
+

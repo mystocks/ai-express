@@ -26,6 +26,7 @@
 #include "CNNMethod/PostPredictor/ActPostPredictor.h"
 #include "CNNMethod/PostPredictor/BackbonePostPredictor.h"
 #include "CNNMethod/PostPredictor/VidPostPredictor.h"
+#include "CNNMethod/PostPredictor/CommonLmkPostPredictor.h"
 
 namespace xstream {
 
@@ -59,6 +60,8 @@ class PostPredictorFactory {
         return new BackBonePostPredictor();
       case PostFun::VID:
         return new VidPostPredictor();
+      case PostFun::COMMON_LMK:
+        return new CommonLmkPostPredictor();
     }
     return nullptr;
   }

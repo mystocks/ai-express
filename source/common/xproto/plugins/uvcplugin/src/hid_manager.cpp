@@ -8,23 +8,25 @@
  * \Brief    implement of api file
  */
 #include "./hid_manager.h"
+
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/select.h>
 #include <sys/time.h>
-#include <fstream>
-#include <chrono>
-#include <string>
-#include "hobotlog/hobotlog.hpp"
-#include "smartplugin/smartplugin.h"
-#include "hobotxsdk/xstream_data.h"
+#include <unistd.h>
 
+#include <chrono>
+#include <fstream>
+#include <string>
+
+#include "hobotlog/hobotlog.hpp"
+#include "hobotxsdk/xstream_data.h"
+#include "smartplugin/smartplugin.h"
 #include "xproto/message/pluginflow/msg_registry.h"
-#include "xproto_msgtype/vioplugin_data.h"
 #include "xproto_msgtype/smartplugin_data.h"
+#include "xproto_msgtype/vioplugin_data.h"
 
 namespace horizon {
 namespace vision {
@@ -39,10 +41,10 @@ HidManager::HidManager(std::string config_path) {
   config_path_ = config_path;
   LOGI << "HidManager smart config file path:" << config_path_;
   stop_flag_ = false;
+  thread_ = nullptr;
 }
 
-HidManager::~HidManager() {
-}
+HidManager::~HidManager() {}
 
 int HidManager::Init() {
   LOGI << "HidManager Init";
@@ -62,14 +64,15 @@ int HidManager::Init() {
         return -1;
       }
     } catch (std::exception &e) {
-      LOGF << "exception while parse config file "
-           << config_path_ << ", " << e.what();
+      LOGF << "exception while parse config file " << config_path_ << ", "
+           << e.what();
       return -1;
     }
     // smart_type_
     if (config_.isMember("smart_type")) {
       smart_type_ = static_cast<SmartType>(config_["smart_type"].asInt());
     }
+
     // hid_file_
     if (config_.isMember("hid_file")) {
       hid_file_ = config_["hid_file"].asString();
@@ -90,17 +93,15 @@ int HidManager::Init() {
 void HidManager::SendThread() {
   // start send Hid 数据
   LOGD << "start HidManager";
-
-  fd_set rset;        // 创建文件描述符的聚合变量
-  FD_ZERO(&rset);     // 文件描述符聚合变量清0
-  FD_SET(hid_file_handle_, &rset);  // 添加文件描述符
-  timeval timeout;    // select timeout
-  timeout.tv_sec = 1;
-  timeout.tv_usec = 0;
-
+  fd_set rset;                     // 创建文件描述符的聚合变量
+  timeval timeout;                 // select timeout
   char *recv_data = new char[20];  // 接收host侧请求
 
   while (!stop_flag_) {
+    FD_ZERO(&rset);                   // 文件描述符聚合变量清0
+    FD_SET(hid_file_handle_, &rset);  // 添加文件描述符
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
     int retv = select(hid_file_handle_ + 1, &rset, NULL, NULL, &timeout);
     if (retv == 0) {
       LOGD << "Hid select: read request time out";
@@ -115,8 +116,9 @@ void HidManager::SendThread() {
       LOGD << "Receive GetSmartResult";
       // 需要从pb_buffer中获取一个结果返回
       std::unique_lock<std::mutex> lck(queue_lock_);
-      bool wait_ret = condition_.wait_for(lck, std::chrono::milliseconds(10),
-                          [&]() {return pb_buffer_queue_.size() > 0;});
+      bool wait_ret =
+          condition_.wait_for(lck, std::chrono::milliseconds(10),
+                              [&]() { return pb_buffer_queue_.size() > 0; });
       // 超时，返回0 给ap
       if (wait_ret == 0) {
         LOGW << "Get smart data time out";
@@ -124,8 +126,23 @@ void HidManager::SendThread() {
         char *buffer = new char[buffer_size];
         memset(buffer, 0x00, buffer_size);
         memmove(buffer, &buffer_size, buffer_size);
+
+        // 发送前select
+        FD_ZERO(&rset);                   // 文件描述符聚合变量清0
+        FD_SET(hid_file_handle_, &rset);  // 添加文件描述符
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
+        retv = select(hid_file_handle_ + 1, &rset, NULL, NULL, &timeout);
+        if (retv == 0) {
+          LOGD << "Hid select: send empty data time out";
+          continue;
+        } else if (retv < 0) {
+          LOGE << "Hid select: send empty data error, ret: " << retv;
+          continue;
+        }
         // 发送4字节:4，即有效长度0
         ret = write(hid_file_handle_, buffer, buffer_size);
+        delete[] buffer;
         if (ret < 0 || ret != buffer_size) {
           LOGE << "Send timeout message error: " << strerror(errno);
         }
@@ -145,6 +162,7 @@ void HidManager::SendThread() {
       sleep(3);  // 3s
     }
   }
+  delete[] recv_data;
 }
 
 int HidManager::Start() {
@@ -165,7 +183,9 @@ int HidManager::Stop() {
   return 0;
 }
 
-int HidManager::FeedSmart(XProtoMessagePtr msg) {
+int HidManager::FeedSmart(XProtoMessagePtr msg, int ori_image_width,
+                          int ori_image_height, int dst_image_width,
+                          int dst_image_height) {
   auto smart_msg = std::static_pointer_cast<SmartMessage>(msg);
   std::string protocol;
   // convert pb2string
@@ -174,23 +194,25 @@ int HidManager::FeedSmart(XProtoMessagePtr msg) {
     return -1;
   }
   switch ((SmartType)smart_type_) {
-  case SmartType::SMART_FACE:
-  case SmartType::SMART_BODY: {
-      auto msg = dynamic_cast<CustomSmartMessage*>(smart_msg.get());
+    case SmartType::SMART_FACE:
+    case SmartType::SMART_BODY: {
+      auto msg = dynamic_cast<CustomSmartMessage *>(smart_msg.get());
       if (msg)
-        protocol = msg->Serialize();
-    break;
-  }
-  case SmartType::SMART_VEHICLE: {
-    auto msg = dynamic_cast<VehicleSmartMessage*>(smart_msg.get());
-    if (msg) {
-      protocol = msg->Serialize();
+        protocol = msg->Serialize(ori_image_width, ori_image_height,
+                                  dst_image_width, dst_image_height);
+      break;
     }
-    break;
-  }
-  default:
-    LOGE << "not support smart_type";
-    return -1;
+    case SmartType::SMART_VEHICLE: {
+      auto msg = dynamic_cast<VehicleSmartMessage *>(smart_msg.get());
+      if (msg) {
+        protocol = msg->Serialize(ori_image_width, ori_image_height,
+                                  dst_image_width, dst_image_height);
+      }
+      break;
+    }
+    default:
+      LOGE << "not support smart_type";
+      return -1;
   }
 
   // pb入队
@@ -218,27 +240,51 @@ int HidManager::Send(const std::string &proto_str) {
   memmove(buffer + sizeof(int), str_src, buffer_size_src);
 
   int ret = 0;
-  int writting_count = buffer_size / 1024;
-  int remainding_size = buffer_size % 1024;
-  buffer_offset_size_t *buffer_offset =
-      reinterpret_cast<buffer_offset_size_t *>(buffer);
   if (buffer == NULL) {
     LOGE << "send error: null data!";
     return -1;
   }
-  while (writting_count--) {
-    ret = write(hid_file_handle_, buffer_offset, 1024);
-    if (ret < 0 || ret != 1024) {
-      LOGE << "send package error: " << strerror(errno) << "; ret: " << ret;
+  char *buffer_offset = buffer;
+  int remainding_size = buffer_size;
+
+  fd_set rset;      // 创建文件描述符的聚合变量
+  timeval timeout;  // select timeout
+  while (remainding_size > 0) {
+    FD_ZERO(&rset);                   // 文件描述符聚合变量清0
+    FD_SET(hid_file_handle_, &rset);  // 添加文件描述符
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    int retv = select(hid_file_handle_ + 1, &rset, NULL, NULL, &timeout);
+    if (retv == 0) {
+      LOGD << "Hid select: send data time out";
+      continue;
+    } else if (retv < 0) {
+      LOGE << "Hid select: send data error, ret: " << retv;
+      continue;
+    }
+    if (remainding_size >= 1024) {
+      LOGD << "Send 1024 bytes data...";
+      ret = write(hid_file_handle_, buffer_offset, 1024);
+      LOGD << "Send 1024 bytes data end";
+    } else {
+      LOGD << "Send " << remainding_size << " bytes data...";
+      ret = write(hid_file_handle_, buffer_offset, remainding_size);
+      LOGD << "Send " << remainding_size << " bytes data end";
+    }
+    if (ret < 0) {
+      LOGF << "send package error: " << strerror(errno) << "; ret: " << ret;
+      delete[] buffer;
       return -1;
     }
-    buffer_offset++;
+    remainding_size = remainding_size - ret;
+    buffer_offset = buffer_offset + ret;
+    if (remainding_size < 0) {
+      LOGF << "send package error: " << strerror(errno) << "; ret: " << ret;
+      delete[] buffer;
+      return -1;
+    }
   }
-  ret = write(hid_file_handle_, buffer_offset, remainding_size);
-  if (ret < 0 || ret != remainding_size) {
-    LOGE << "send remainding error: " << strerror(errno) << "; ret: " << ret;
-    return -1;
-  }
+  delete[] buffer;
   return 0;
 }
 

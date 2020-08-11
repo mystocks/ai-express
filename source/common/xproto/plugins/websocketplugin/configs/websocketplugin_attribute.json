@@ -35,5 +35,15 @@
   "gender":{
     "1": "男",
     "-1": "女"
+  },
+  "gesture": {
+    "0": "No Gesture",
+    "1": "Left",
+    "2": "Right",
+    "3": "Up",
+    "4": "Down",
+    "5": "Finger Heart",
+    "6": "Thumb Up",
+    "7": "Victory"
   }
 }

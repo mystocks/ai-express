@@ -17,6 +17,7 @@
 #include "websocketplugin/server/uws_server.h"
 #include "xproto/message/pluginflow/flowmsg.h"
 #include "xproto/plugin/xpluginasync.h"
+#include "xproto/threads/threadpool.h"
 #include "xproto_msgtype/protobuf/x3.pb.h"
 #ifdef X3_MEDIA_CODEC
 #include "media_codec/media_codec_manager.h"
@@ -38,10 +39,13 @@ class WebsocketPlugin : public xproto::XPluginAsync {
   int Init() override;
   int Start() override;
   int Stop() override;
+  std::string desc() const { return "WebsocketPlugin"; }
 
  private:
   int FeedVideo(XProtoMessagePtr msg);
   int FeedSmart(XProtoMessagePtr msg);
+
+  void EncodeJpg(XProtoMessagePtr msg);
   void ParseConfig();
   int Reset();
  private:
@@ -63,6 +67,7 @@ class WebsocketPlugin : public xproto::XPluginAsync {
 #ifdef X3_MEDIA_CODEC
   int chn_;
 #endif
+  hobot::CThreadPool jpg_encode_thread_;
 };
 
 }  // namespace websocketplugin

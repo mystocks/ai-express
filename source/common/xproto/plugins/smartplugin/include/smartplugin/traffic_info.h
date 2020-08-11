@@ -77,14 +77,14 @@ struct Gis {
  */
 struct Plate {
   Box box;
-  bool is_double_plate;
   std::vector<Point> points;
   std::string plate_num;
+  int32_t is_double_plate;
   int32_t color;
   int32_t type;
 
   Plate() {
-    is_double_plate = false;
+    is_double_plate = -1;
     color = -1;
     type = -1;
   }

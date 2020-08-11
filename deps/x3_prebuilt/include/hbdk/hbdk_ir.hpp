@@ -232,6 +232,8 @@ struct Layer {
     CORRELATION,
     SELEMENTWISE_MUL,  // elementwise mul two tensor that quantized by scale
     STEPWISE_FIT,
+    CONVERT_BETWEEN_INT8_AND_UINT8,
+    DILATE,
   };
 
   Layer() = default;
@@ -393,16 +395,17 @@ struct SConvolutionLayer : public Layer {
         padding(std::move(padding)) {}
   SConvolutionLayer(std::string name, std::vector<std::shared_ptr<Tensor>> input_tensors,
                     std::vector<std::shared_ptr<Tensor>> output_tensors, Shape2D stride, Shape2D padding,
-                    std::vector<int8_t> bias_shift, std::vector<int32_t> scale, std::vector<int8_t> accu_shift,
-                    std::vector<int8_t> output_shift, std::vector<int8_t> sumin_shift, std::vector<int32_t> sumin_scale)
+                    std::vector<int8_t> bias_left_shift, std::vector<int32_t> output_scale,
+                    std::vector<int8_t> accu_right_shift, std::vector<int8_t> output_right_shift,
+                    std::vector<int8_t> sumin_left_shift, std::vector<int32_t> sumin_scale)
       : Layer(std::move(name), std::move(input_tensors), std::move(output_tensors)),
         stride(std::move(stride)),
         padding(std::move(padding)),
-        bias_shift(std::move(bias_shift)),
-        scale(std::move(scale)),
-        accu_shift(std::move(accu_shift)),
-        output_shift(std::move(output_shift)),
-        sumin_shift(std::move(sumin_shift)),
+        bias_left_shift(std::move(bias_left_shift)),
+        output_scale(std::move(output_scale)),
+        accu_right_shift(std::move(accu_right_shift)),
+        output_right_shift(std::move(output_right_shift)),
+        sumin_left_shift(std::move(sumin_left_shift)),
         sumin_scale(std::move(sumin_scale)) {}
   ~SConvolutionLayer() noexcept override = default;
   layer_type_t GetLayerType() const override { return layer_type_t::SCONVOLUTION; }
@@ -411,13 +414,13 @@ struct SConvolutionLayer : public Layer {
   void serialize(Archive &ar, std::int32_t const version) {
     // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
     if (version == 1) {
-      ar(cereal::base_class<Layer>(this), CEREAL_NVP(stride), CEREAL_NVP(padding), CEREAL_NVP(bias_shift),
-         CEREAL_NVP(scale), CEREAL_NVP(accu_shift), CEREAL_NVP(output_shift), CEREAL_NVP(sumin_shift),
-         CEREAL_NVP(sumin_scale));
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(stride), CEREAL_NVP(padding), CEREAL_NVP(bias_left_shift),
+         CEREAL_NVP(output_scale), CEREAL_NVP(accu_right_shift), CEREAL_NVP(output_right_shift),
+         CEREAL_NVP(sumin_left_shift), CEREAL_NVP(sumin_scale));
     } else if (version == 2) {
       ar(cereal::base_class<Layer>(this), CEREAL_NVP(stride), CEREAL_NVP(padding), CEREAL_NVP(dilation),
-         CEREAL_NVP(bias_shift), CEREAL_NVP(scale), CEREAL_NVP(accu_shift), CEREAL_NVP(output_shift),
-         CEREAL_NVP(sumin_shift), CEREAL_NVP(sumin_scale));
+         CEREAL_NVP(bias_left_shift), CEREAL_NVP(output_scale), CEREAL_NVP(accu_right_shift),
+         CEREAL_NVP(output_right_shift), CEREAL_NVP(sumin_left_shift), CEREAL_NVP(sumin_scale));
     } else {
       AbortOnVersion(this, version);
     }
@@ -427,11 +430,11 @@ struct SConvolutionLayer : public Layer {
   Shape2D padding;            // [H, W]
   Shape2D dilation = {1, 1};  // [H, W]
 
-  std::vector<int8_t> bias_shift;
-  std::vector<int32_t> scale;
-  std::vector<int8_t> accu_shift;
-  std::vector<int8_t> output_shift;
-  std::vector<int8_t> sumin_shift;
+  std::vector<int8_t> bias_left_shift;
+  std::vector<int32_t> output_scale;
+  std::vector<int8_t> accu_right_shift;
+  std::vector<int8_t> output_right_shift;
+  std::vector<int8_t> sumin_left_shift;
   std::vector<int32_t> sumin_scale;
 };
 
@@ -489,18 +492,18 @@ struct SDeconvolutionLayer : public Layer {
 
   SDeconvolutionLayer(std::string name, std::vector<std::shared_ptr<Tensor>> input_tensors,
                       std::vector<std::shared_ptr<Tensor>> output_tensors, Shape2D stride, Shape2D padding,
-                      Shape2D output_padding, std::vector<int8_t> bias_shift, std::vector<int32_t> scale,
-                      std::vector<int8_t> accu_shift, std::vector<int8_t> output_shift, std::vector<int8_t> sumin_shift,
-                      std::vector<int32_t> sumin_scale)
+                      Shape2D output_padding, std::vector<int8_t> bias_left_shift, std::vector<int32_t> output_scale,
+                      std::vector<int8_t> accu_right_shift, std::vector<int8_t> output_right_shift,
+                      std::vector<int8_t> sumin_left_shift, std::vector<int32_t> sumin_scale)
       : Layer(std::move(name), std::move(input_tensors), std::move(output_tensors)),
         stride(std::move(stride)),
         padding(std::move(padding)),
         output_padding(std::move(output_padding)),
-        bias_shift(std::move(bias_shift)),
-        scale(std::move(scale)),
-        accu_shift(std::move(accu_shift)),
-        output_shift(std::move(output_shift)),
-        sumin_shift(std::move(sumin_shift)),
+        bias_left_shift(std::move(bias_left_shift)),
+        output_scale(std::move(output_scale)),
+        accu_right_shift(std::move(accu_right_shift)),
+        output_right_shift(std::move(output_right_shift)),
+        sumin_left_shift(std::move(sumin_left_shift)),
         sumin_scale(std::move(sumin_scale)) {}
   ~SDeconvolutionLayer() noexcept override = default;
   layer_type_t GetLayerType() const override { return layer_type_t::SDECONVOLUTION; }
@@ -510,8 +513,8 @@ struct SDeconvolutionLayer : public Layer {
     // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
     if (version == 1) {
       ar(cereal::base_class<Layer>(this), CEREAL_NVP(stride), CEREAL_NVP(padding), CEREAL_NVP(output_padding),
-         CEREAL_NVP(bias_shift), CEREAL_NVP(scale), CEREAL_NVP(accu_shift), CEREAL_NVP(output_shift),
-         CEREAL_NVP(sumin_shift), CEREAL_NVP(sumin_scale));
+         CEREAL_NVP(bias_left_shift), CEREAL_NVP(output_scale), CEREAL_NVP(accu_right_shift),
+         CEREAL_NVP(output_right_shift), CEREAL_NVP(sumin_left_shift), CEREAL_NVP(sumin_scale));
     } else {
       AbortOnVersion(this, version);
     }
@@ -521,11 +524,11 @@ struct SDeconvolutionLayer : public Layer {
   Shape2D padding;
   Shape2D output_padding;
 
-  std::vector<int8_t> bias_shift;
-  std::vector<int32_t> scale;
-  std::vector<int8_t> accu_shift;
-  std::vector<int8_t> output_shift;
-  std::vector<int8_t> sumin_shift;
+  std::vector<int8_t> bias_left_shift;
+  std::vector<int32_t> output_scale;
+  std::vector<int8_t> accu_right_shift;
+  std::vector<int8_t> output_right_shift;
+  std::vector<int8_t> sumin_left_shift;
   std::vector<int32_t> sumin_scale;
 };
 
@@ -594,6 +597,9 @@ struct MaxPoolingLayer : public Layer {
     if (version == 1) {
       ar(cereal::base_class<Layer>(this), CEREAL_NVP(kernel), CEREAL_NVP(stride), CEREAL_NVP(padding),
          CEREAL_NVP(result_right_shift));
+    } else if (version == 2) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(kernel), CEREAL_NVP(stride), CEREAL_NVP(padding),
+         CEREAL_NVP(result_right_shift), CEREAL_NVP(pad_mode));
     } else {
       AbortOnVersion(this, version);
     }
@@ -603,6 +609,7 @@ struct MaxPoolingLayer : public Layer {
   Shape2D stride;
   Shape2D padding;
   uint32_t result_right_shift = 9;  // result sum will right shift this
+  enum class PadMode { CONSTANT, BOUNDARY } pad_mode = PadMode::CONSTANT;
 };
 
 /**
@@ -736,6 +743,11 @@ struct RoiResizeLayer : public Layer {
       ar(cereal::base_class<Layer>(this), CEREAL_NVP(roi_.left), CEREAL_NVP(roi_.top), CEREAL_NVP(roi_.right),
          CEREAL_NVP(roi_.bottom), CEREAL_NVP(pad_mode_), CEREAL_NVP(align_mode_), CEREAL_NVP(is_interpolate_twice),
          CEREAL_NVP(precision_bit_num_), CEREAL_NVP(start_offset_), CEREAL_NVP(step_));
+    } else if (version == 9) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(roi_.left), CEREAL_NVP(roi_.top), CEREAL_NVP(roi_.right),
+         CEREAL_NVP(roi_.bottom), CEREAL_NVP(pad_mode_), CEREAL_NVP(align_mode_), CEREAL_NVP(is_interpolate_twice),
+         CEREAL_NVP(precision_bit_num_), CEREAL_NVP(start_offset_), CEREAL_NVP(step_),
+         CEREAL_NVP(calibrate_step_block_size_));
     } else {
       AbortOnVersion(this, version);
     }
@@ -769,6 +781,13 @@ struct RoiResizeLayer : public Layer {
    * the step value should be 8bit integer and 8bit decimal.
    */
   std::pair<uint32_t, uint32_t> step_ = {UINT32_MAX, UINT32_MAX};
+
+  /*
+   * On X2/X3, the step precision is 8bit. In some cases, this may result in poor scaling accuracy.
+   * You can use 16bit steps to calibrate the interpolation point coordinates per calibrate_step_block_size_ points.
+   * -1 indicates that calibration is not enabled.
+   */
+  int32_t calibrate_step_block_size_ = -1;
 };
 
 /**
@@ -816,10 +835,14 @@ struct ElementwiseMul : public Layer {
     // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
     if (version == 1) {
       ar(cereal::base_class<Layer>(this));
+    } else if (version == 2) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(enable_rounding));
     } else {
       AbortOnVersion(this, version);
     }
   }
+
+  bool enable_rounding = false;
 };
 
 /**
@@ -841,19 +864,27 @@ struct SElementwiseMul : public Layer {
   void serialize(Archive &ar, std::int32_t const version) {
     // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
     if (version == 1) {
-      ar(cereal::base_class<Layer>(this), CEREAL_NVP(bias_shift), CEREAL_NVP(scale), CEREAL_NVP(accu_shift),
-         CEREAL_NVP(output_shift), CEREAL_NVP(sumin_shift), CEREAL_NVP(sumin_scale));
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(bias_left_shift), CEREAL_NVP(output_scale),
+         CEREAL_NVP(accu_right_shift), CEREAL_NVP(output_right_shift), CEREAL_NVP(sumin_left_shift),
+         CEREAL_NVP(sumin_scale));
+    } else if (version == 2) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(output_scale), CEREAL_NVP(accu_right_shift),
+         CEREAL_NVP(output_right_shift), CEREAL_NVP(enable_rounding));
     } else {
       AbortOnVersion(this, version);
     }
   }
 
-  std::vector<int8_t> bias_shift;
-  std::vector<int32_t> scale;
-  std::vector<int8_t> accu_shift;
-  std::vector<int8_t> output_shift;
-  std::vector<int8_t> sumin_shift;
+  std::vector<int32_t> output_scale;
+  std::vector<int8_t> accu_right_shift;
+  std::vector<int8_t> output_right_shift;
+
+  bool enable_rounding = false;
+
+  // deprecated parameters, plan to delete on version 3.12.x
   std::vector<int32_t> sumin_scale;
+  std::vector<int8_t> bias_left_shift;
+  std::vector<int8_t> sumin_left_shift;
 };
 
 /**
@@ -876,10 +907,60 @@ struct ElementwiseAdd : public Layer {
     // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
     if (version == 1) {
       ar(cereal::base_class<Layer>(this));
+    } else if (version == 2) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(enable_rounding));
     } else {
       AbortOnVersion(this, version);
     }
   }
+  bool enable_rounding = false;
+};
+
+/**
+ * SElementwise Add Layer
+ *
+ * input [feature1, feature2]
+ * 1. feature1 shape is [N, H, W, C], no shift values
+ * 2. feature2 shape is [N, H, W, C], no shift values
+ *    (feature2 is sumin)
+ *
+ * output [output]
+ * 1. output shape is [N, H, W, C], no shift values
+ *
+ * output = (saturate16((feature1 << input_left_shift + (sumin * sumin_scale) >> accu_shift) * scale) >> output_shift
+ */
+struct SElementwiseAdd : public Layer {
+  using Layer::Layer;
+  ~SElementwiseAdd() noexcept override = default;
+  layer_type_t GetLayerType() const override { return layer_type_t::SELEMENTWISE_ADD; }
+
+  template <class Archive>
+  void serialize(Archive &ar, std::int32_t const version) {
+    // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
+    if (version == 2) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(output_scale), CEREAL_NVP(accu_right_shift),
+         CEREAL_NVP(output_right_shift), CEREAL_NVP(sumin_scale), CEREAL_NVP(sumin_left_shift),
+         CEREAL_NVP(input_left_shift), CEREAL_NVP(enable_rounding));
+    } else if (version == 3) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(output_scale), CEREAL_NVP(accu_right_shift),
+         CEREAL_NVP(output_right_shift), CEREAL_NVP(sumin_scale), CEREAL_NVP(sumin_left_shift),
+         CEREAL_NVP(input_left_shift), CEREAL_NVP(input_scale), CEREAL_NVP(enable_rounding));
+    } else {
+      AbortOnVersion(this, version);
+    }
+  }
+
+  std::vector<int32_t> output_scale;
+  std::vector<int8_t> accu_right_shift;
+  std::vector<int8_t> output_right_shift;
+
+  std::vector<int32_t> input_scale;  // only used by x2ad
+  std::vector<int8_t> input_left_shift;
+
+  std::vector<int32_t> sumin_scale;
+  std::vector<int8_t> sumin_left_shift;
+
+  bool enable_rounding = false;
 };
 
 /* ===============================================
@@ -914,10 +995,13 @@ struct ElementwiseSub : public Layer {
     // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
     if (version == 1) {
       ar(cereal::base_class<Layer>(this));
+    } else if (version == 2) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(enable_rounding));
     } else {
       AbortOnVersion(this, version);
     }
   }
+  bool enable_rounding = false;
 };
 
 /**
@@ -1282,7 +1366,7 @@ struct RcnnPostProcessLayer : public Layer {
                        std::vector<std::shared_ptr<Tensor>> output_tensors, Attr attr)
       : Layer(std::move(name), std::move(input_tensors), std::move(output_tensors)), attr(std::move(attr)) {}
   ~RcnnPostProcessLayer() override = default;
-  layer_type_t GetLayerType() const override { return layer_type_t ::RCNN_POST_PROCESS; }
+  layer_type_t GetLayerType() const override { return layer_type_t::RCNN_POST_PROCESS; }
 
   template <class Archive>
   void serialize(Archive &ar, std::int32_t const version) {
@@ -1754,44 +1838,6 @@ struct ShuffleLayer : public Layer {
 };
 
 /**
- * SElementwise Add Layer
- *
- * input [feature1, feature2]
- * 1. feature1 shape is [N, H, W, C], no shift values
- * 2. feature2 shape is [N, H, W, C], no shift values
- *    (feature2 is sumin)
- *
- * output [output]
- * 1. output shape is [N, H, W, C], no shift values
- *
- * output = (((feature1 + (sumin << sumin_shift) * sumin_scale) >> accu_shift) * scale) >> output_shift
- */
-struct SElementwiseAdd : public Layer {
-  using Layer::Layer;
-  ~SElementwiseAdd() noexcept override = default;
-  layer_type_t GetLayerType() const override { return layer_type_t::SELEMENTWISE_ADD; }
-
-  template <class Archive>
-  void serialize(Archive &ar, std::int32_t const version) {
-    // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
-    if (version == 1) {
-      ar(cereal::base_class<Layer>(this), CEREAL_NVP(scale), CEREAL_NVP(accu_shift), CEREAL_NVP(output_shift),
-         CEREAL_NVP(sumin_shift), CEREAL_NVP(sumin_scale));
-      bias_shift.assign(scale.size(), 0);
-    } else {
-      AbortOnVersion(this, version);
-    }
-  }
-
-  std::vector<int8_t> bias_shift;
-  std::vector<int32_t> scale;
-  std::vector<int8_t> accu_shift;
-  std::vector<int8_t> output_shift;
-  std::vector<int8_t> sumin_shift;
-  std::vector<int32_t> sumin_scale;
-};
-
-/**
  * Optical Pyramid Layer
  *
  * input: original feature(scalar)
@@ -1805,12 +1851,15 @@ struct OpticalPyramidLayer : public Layer {
   OpticalPyramidLayer() = default;
   OpticalPyramidLayer(std::string name, std::vector<std::shared_ptr<Tensor>> input_tensors,
                       std::vector<std::shared_ptr<Tensor>> output_tensors, std::vector<int32_t> scalar_outputs,
-                      std::vector<int32_t> gradient_outputs, int32_t pyramid_level, BorderMode border_mode)
+                      std::vector<int32_t> gradient_outputs, int32_t pyramid_level, int32_t padding_pixel,
+                      BorderMode border_mode, std::string scalar_element_type)
       : Layer(std::move(name), std::move(input_tensors), std::move(output_tensors)),
         scalar_outputs_(std::move(scalar_outputs)),
         grad_outputs_(std::move(gradient_outputs)),
         pyramid_level_(pyramid_level),
-        border_mode_(border_mode) {}
+        padding_pixel_(padding_pixel),
+        border_mode_(border_mode),
+        scalar_element_type_(scalar_element_type) {}
   ~OpticalPyramidLayer() noexcept override = default;
   layer_type_t GetLayerType() const override { return layer_type_t::OPTICAL_PYRAMID; }
   std::vector<std::pair<bool, bool>> pyramid_config_;
@@ -1820,13 +1869,19 @@ struct OpticalPyramidLayer : public Layer {
   std::vector<int32_t> scalar_outputs_;
   std::vector<int32_t> grad_outputs_;
   int32_t pyramid_level_;
+  int32_t padding_pixel_;
   BorderMode border_mode_;
+  std::string scalar_element_type_;
 
   template <class Archive>
   void serialize(Archive &ar, std::int32_t const version) {
     if (version == 1) {
       ar(cereal::base_class<Layer>(this), CEREAL_NVP(pyramid_config_), CEREAL_NVP(border_mode_),
          CEREAL_NVP(pyramid_level_), CEREAL_NVP(scalar_outputs_), CEREAL_NVP(grad_outputs_));
+    } else if (version == 2) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(pyramid_config_), CEREAL_NVP(border_mode_),
+         CEREAL_NVP(pyramid_level_), CEREAL_NVP(scalar_outputs_), CEREAL_NVP(grad_outputs_), CEREAL_NVP(padding_pixel_),
+         CEREAL_NVP(scalar_element_type_));
     } else {
       AbortOnVersion(this, version);
     }
@@ -1918,10 +1973,9 @@ struct StepwiseFit : public Layer {
   using Layer::Layer;
   ~StepwiseFit() noexcept override = default;
   layer_type_t GetLayerType() const override { return layer_type_t::STEPWISE_FIT; }
-
+  // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
   template <class Archive>
   void serialize(Archive &ar, std::int32_t const version) {
-    // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
     if (version == 1) {
       ar(cereal::base_class<Layer>(this), CEREAL_NVP(boundary_table), CEREAL_NVP(output_table));
     } else {
@@ -1931,6 +1985,66 @@ struct StepwiseFit : public Layer {
 
   std::vector<int32_t> boundary_table;
   std::vector<int8_t> output_table;
+};
+
+/**
+ * ConvertBetweenInt8AndUint8 Layer:
+ *
+ * See the all the data as int8, and elementwise subtract 128(for int8, plus 128 as well)
+ *   int8_t a = -1;
+ *   int8_t b = -1 - 128 = 127
+ *   int8_t c = -1 + 128 = 127
+ *
+ * So this layer can convert uint8 image to int8 and to calculate on BPU, and then convert to uint8 image
+ */
+struct ConvertBetweenInt8AndUint8Layer : public Layer {
+  using Layer::Layer;
+  ~ConvertBetweenInt8AndUint8Layer() noexcept override = default;
+  layer_type_t GetLayerType() const override { return layer_type_t::CONVERT_BETWEEN_INT8_AND_UINT8; }
+
+  template <class Archive>
+  void serialize(Archive &ar, std::int32_t const version) {
+    // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
+    if (version == 1) {
+      ar(cereal::base_class<Layer>(this));
+    } else {
+      AbortOnVersion(this, version);
+    }
+  }
+};
+
+/***
+ * Dilate Inst, same with cv.dilate
+ *
+ *  dst(x, y) =          max             src(x + x', y + y')
+ *             (x',y'):element(x',y') not 0
+ *
+ *  x' and y' are the kernel size
+ *
+ */
+struct DilateLayer : public Layer {
+  using Layer::Layer;
+  DilateLayer() = default;
+  DilateLayer(std::string name, std::vector<std::shared_ptr<Tensor>> input_tensors,
+              std::vector<std::shared_ptr<Tensor>> output_tensors, Shape2D kernel, std::string element_type)
+      : Layer(std::move(name), std::move(input_tensors), std::move(output_tensors)),
+        kernel(kernel),
+        element_type_(std::move(element_type)) {}
+  ~DilateLayer() noexcept override = default;
+  layer_type_t GetLayerType() const override { return layer_type_t::DILATE; }
+
+  template <class Archive>
+  void serialize(Archive &ar, std::int32_t const version) {
+    // Don't forget to update the version number using HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION in the following
+    if (version == 1) {
+      ar(cereal::base_class<Layer>(this), CEREAL_NVP(kernel), CEREAL_NVP(element_type_));
+    } else {
+      AbortOnVersion(this, version);
+    }
+  }
+
+  Shape2D kernel;
+  std::string element_type_;
 };
 
 }  // namespace hbir
@@ -1954,25 +2068,25 @@ HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::SConvolutionLayer, 2);
 // NOLINTNEXTLINE
 HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::AvgPoolingLayer, 1);
 // NOLINTNEXTLINE
-HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::MaxPoolingLayer, 1);
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::MaxPoolingLayer, 2);
 // NOLINTNEXTLINE
 HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::GlobalAvgPoolingLayer, 2);
 // NOLINTNEXTLINE
 HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::GlobalMaxPoolingLayer, 1);
 // NOLINTNEXTLINE
-HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::RoiResizeLayer, 8);
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::RoiResizeLayer, 9);
 // NOLINTNEXTLINE
 HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::ReluLayer, 1);
 // NOLINTNEXTLINE
-HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::ElementwiseMul, 1);
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::ElementwiseMul, 2);
 // NOLINTNEXTLINE
-HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::SElementwiseMul, 1);
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::SElementwiseMul, 2);
 // NOLINTNEXTLINE
-HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::ElementwiseAdd, 1);
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::ElementwiseAdd, 2);
 // NOLINTNEXTLINE
-HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::ElementwiseSub, 1);
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::ElementwiseSub, 2);
 // NOLINTNEXTLINE
-HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::SElementwiseAdd, 1);
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::SElementwiseAdd, 3);
 // NOLINTNEXTLINE
 HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::SplitLayer, 1);
 // NOLINTNEXTLINE
@@ -2018,13 +2132,17 @@ HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::ShuffleLayer, 1);
 // NOLINTNEXTLINE
 HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::SQuantiInputLayer, 1);
 // NOLINTNEXTLINE
-HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::OpticalPyramidLayer, 1);
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::OpticalPyramidLayer, 2);
 // NOLINTNEXTLINE
 HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::PadLayer, 1);
 // NOLINTNEXTLINE
 HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::Correlation, 1);
 // NOLINTNEXTLINE
 HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::StepwiseFit, 1);
+// NOLINTNEXTLINE
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::ConvertBetweenInt8AndUint8Layer, 1);
+// NOLINTNEXTLINE
+HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION(hbdk::hbir::DilateLayer, 1);
 #undef HBDK_HBIR_CEREAL_REGISTER_TYPE_WITH_VERSION
 
 #endif  // SWIG

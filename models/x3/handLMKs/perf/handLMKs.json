@@ -1,0 +1,88 @@
+{
+    "summary": {
+        "BPU OPs per frame (effective)": 360972288,
+        "BPU OPs per frame (working)": 445899776,
+        "BPU OPs per run (effective)": 360972288,
+        "BPU OPs per run (working)": 445899776,
+        "BPU PE number": 1,
+        "BPU core number": 1,
+        "BPU march": "BERNOULLI2",
+        "BPU utilization (effective)": 0.699,
+        "BPU utilization (working)": 0.848,
+        "DDR bytes per frame": 3332672,
+        "DDR bytes per run": 3332672,
+        "DDR bytes per second": 3246462196,
+        "DDR megabytes per frame": 3.178,
+        "DDR megabytes per run": 3.178,
+        "DDR megabytes per second": 3096.1,
+        "FPS": 974.13,
+        "HBDK version": "3.7.10",
+        "compiling options": "--march bernoulli2 -m /gpfs/plat_aidi/model/2316/IntInference/handpoints.json -p /gpfs/plat_aidi/model/2316/IntInference/handpoints.params -s 1x128x128x3 -i resizer --O2 -o handLMKs.hbm",
+        "frame per run": 1,
+        "frame per second": 974.13,
+        "input features": [
+            [
+                "input name",
+                "input size"
+            ],
+            [
+                "quanti_input_output",
+                "1x128x128x3"
+            ]
+        ],
+        "interval convolution unit utilization": [
+            0.99,
+            0.984,
+            0.994,
+            0.982,
+            0.987,
+            0.91,
+            0.443,
+            0.839,
+            0.615,
+            0.799,
+            0.166
+        ],
+        "interval loading bandwidth (megabytes/s)": [
+            451,
+            2001,
+            1054,
+            5390,
+            3211,
+            6298,
+            6818,
+            2054,
+            2918,
+            20,
+            0
+        ],
+        "interval number": 11,
+        "interval storing bandwidth (megabytes/s)": [
+            0,
+            312,
+            0,
+            156,
+            0,
+            78,
+            78,
+            0,
+            0,
+            468,
+            468
+        ],
+        "interval time (ms)": 0.1,
+        "latency (ms)": 1.0,
+        "latency (us)": 1026.6,
+        "loaded bytes per frame": 3168832,
+        "loaded bytes per run": 3168832,
+        "model json CRC": "d3a15a42",
+        "model json file": "/gpfs/plat_aidi/model/2316/IntInference/handpoints.json",
+        "model name": "handLMKs",
+        "model param CRC": "5398aab1",
+        "model param file": "/gpfs/plat_aidi/model/2316/IntInference/handpoints.params",
+        "run per second": 974.13,
+        "runtime version": "3.5.3",
+        "stored bytes per frame": 163840,
+        "stored bytes per run": 163840
+    }
+}

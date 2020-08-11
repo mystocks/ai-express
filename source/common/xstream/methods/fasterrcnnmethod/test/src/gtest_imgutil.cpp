@@ -72,8 +72,13 @@ TEST(ImgUtilTest, NV122BGR) {
   fb_vio.FreeImgInfo(&data);
 #endif
 #ifdef X3
-  HbVioFbWrapperGlobal fb_vio(
-      "./configs/vio_config/x3dev/hb_vio_x3_1080_fb.json");
+#ifdef X3_X2_VIO
+  std::string fb_cfg = "./configs/vio_config/x3dev/hb_vio_x3_1080_fb.json";
+#endif
+#ifdef X3_IOT_VIO
+  std::string fb_cfg = "./configs/vio_config/vio/x3dev/iot_vio_x3_1080_fb.json";
+#endif
+  HbVioFbWrapperGlobal fb_vio(fb_cfg);
   auto ret = fb_vio.Init();
   ASSERT_EQ(ret, 0);
   std::string test_img = "./test/data/1080p.jpg";

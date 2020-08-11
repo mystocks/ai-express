@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>场景参考解决方案 &mdash; AI Express用户手册 2.3.0 文档</title>
+  <title>场景参考解决方案 &mdash; AI Express用户手册 2.4.0 文档</title>
   
 
   
@@ -91,6 +91,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#id5">人体行为分析参考方案</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id6">体感游戏参考方案</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id7">车辆结构化参考方案</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">手势识别参考方案</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ai">AI盒子场景参考方案</a></li>
 </ul>
 </li>
@@ -174,7 +175,7 @@
 <p>场景参考解决方案是在天工开物模型仓库(Model Zoo)中的产品算法之上，将地平线各种量产场景方案进行开放。下图是“天工开物”模型仓库（Model Zoo）产品算法开放列表。</p>
 <p><img alt="模型仓库" src="../../_images/model-zoo.png" /></p>
 <p>这些产品算法涉及人脸、人体、车辆等多种类别，具备极高的算法质量和精度，可有效避免合作伙伴“重复发明轮子”，大幅节省算法训练和开发的时间与成本。</p>
-<p>当前版本我们选取人脸，人体，车辆部分核心算法模型，开放了<strong>人脸结构化参考方案</strong>,<strong>人体结构化参考方案</strong>,<strong>人体行为分析参考方案</strong>,<strong>体感游戏参考方案</strong>,<strong>车辆结构化参考方案[代码暂未开放]<strong>五个解决方案以及一个复合的</strong>AI盒子场景参考方案</strong>。</p>
+<p>当前版本我们选取人脸，人体，车辆部分核心算法模型，开放了<strong>人脸结构化参考方案</strong>,<strong>人体结构化参考方案</strong>,<strong>人体行为分析参考方案</strong>,<strong>体感游戏参考方案</strong>,<strong>车辆结构化参考方案[代码暂未开放]</strong>,<strong>手势识别</strong>六个解决方案以及一个复合的<strong>AI盒子场景参考方案</strong>。</p>
 <p>这些参考方案在地平线X2系列96board/2610面板机参考硬件板卡或者X3系列X3-DVB板上都可以直接部署运行，未来会支持IPC等更多硬件板卡形态。</p>
 <p><img alt="硬件板子" src="../../_images/n-boards.png" /></p>
 <p>您也可以将这些参考方案轻松迁移到基于地平线芯片的其他硬件设备中。</p>
@@ -493,6 +494,10 @@
 <p><img alt="框架" src="../../_images/vehicle.png" /></p>
 <p>关于车辆结构化参考方案，详细参考<a class="reference internal" href="../../xsdk/solution_zoo/vehicle/README.html"><span class="doc">README</span></a>。</p>
 </div>
+<div class="section" id="id8">
+<h2>手势识别参考方案<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h2>
+<p>手势识别是互动娱乐、智能车载等领域中的常用功能之一。AI-Express 2.4.0版本中，结合地平线基于序列的行为识别模型，给出了手势识别参考方案。方案可以参考：https://developer.horizon.ai/forum/id=5f30f806bec8bc98cb72b288</p>
+</div>
 <div class="section" id="ai">
 <h2>AI盒子场景参考方案<a class="headerlink" href="#ai" title="永久链接至标题">¶</a></h2>
 <p>在一些AI盒子等复合应用场景，需要同时支持多路输入和多Workflow数据流，并可以通过配置文件来控制每一路输入与Workflow之间的映射关系。</p>
@@ -501,7 +506,8 @@
 <p>视频流1配置为进行人脸结构化和人体结构化，而视频流2仅配置进行人体结构化。</p>
 <p>针对这种负责场景，AI Express支持灵活配置视频流的路数，workflow的个数以及视频流与workflow之间的映射关系。</p>
 <p>注意：多路输入和多Workflow数据流方案，同一路视频在各个workflow中的智能化计算流程是完全独立。如果多个workflow有共同Method，会被同时计算多次，不支持Workflow间的计算结果共享。</p>
-<p>关于多路输入和多Workflow数据流方案，详细参考<a class="reference internal" href="../../xsdk/solution_zoo/face_body_multisource/README.html"><span class="doc">README</span></a>。</p>
+<p>关于多路输入和多Workflow数据流方案，详细参考<a class="reference internal" href="../../xsdk/solution_zoo/face_body_multisource/README.html"><span class="doc">README</span></a> 以及 https://developer.horizon.ai/forum/id=5f2be161740aaf0beb31234a</p>
+<p>AI盒子场景，添加了一个示例，通过RTSP协议从IPC中获取4路1080P的264码流，在X3上硬件解码，然后送入网络模型进行分析，图像与检测结果通过vo模块输出，显示器通过HDMI接口连接到X3板子就可以看到实际效果。</p>
 </div>
 </div>
 

@@ -1,0 +1,16 @@
+# SetPipeLineParamReq
+
+## Properties
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**config** | **dict(str, object)** | pipeline custom defined config in body | [optional] 
+**id** | **str** | dag run id in: body | 
+**res_cluster** | **str** | pipeline res cluster info, for gpu jobs in: body | [optional] 
+**res_id** | **int** | pipeline res id in: body | [optional] 
+**res_name** | **str** | pipeline res name in: body | [optional] 
+**res_version** | **str** | pipeline res version, for res with version in: body | [optional] 
+**type** | **str** | pipeline res type, currently support bucket frame_extract prelabel filter packing train model prediction eval_set prs eval report run_config in: body | 
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

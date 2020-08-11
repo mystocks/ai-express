@@ -86,7 +86,7 @@ class MediaCodecManager {
   int FreeStream(int chn, iot_venc_stream_buf_t *stream_buf);
   int SetUserCbrParams(int chn, int bit_rate, int fps, int intra, int buf_size);
   int VbBufInit(int chn, int width, int height, int stride,
-          int size, int vb_num);
+          int size, int vb_num, int vb_cache_en);
   int VbBufDeInit(int chn);
   int GetVbBuf(int chn, iot_venc_src_buf_t **buf);
   int FreeVbBuf(int chn, iot_venc_src_buf_t *buf);
@@ -101,7 +101,11 @@ class MediaCodecManager {
 
   int SetDefaultRcParams(int chn, PAYLOAD_TYPE_E type, VENC_CHN_ATTR_S *attr);
   int AllocFrameBuffer(int chn, iot_venc_stream_buf_t *buf);
-  int AllocVbBuf2Lane(int index, void *buf, int size_y, int size_uv);
+  int AllocVbBuf2Lane(int index, void *buf, int size_y, int size_uv,
+      int vb_cache_en);
+  int AllocVbBuf3Lane(int index, void *buf, int size_y, int size_u,
+      int size_v, int vb_cache_en);
+  int AllocVbBufLane(int index, void *buf, int size, int vb_cache_en);
 
  private:
   std::mutex mutex_;
@@ -112,7 +116,9 @@ class MediaCodecManager {
   VENC_CHN_ATTR_S venc_chn_attr_[VENC_MAX_CHN_NUM];
   VENC_JPEG_PARAM_S venc_chn_jpg_params_[VENC_MAX_CHN_NUM];
   PAYLOAD_TYPE_E chn_type_[VENC_MAX_CHN_NUM];
-  int vb_num_[VENC_MAX_CHN_NUM];
+  int vb_num_[VENC_MAX_CHN_NUM] = { 0 };
+  int use_vb_[VENC_MAX_CHN_NUM] = { 0 };
+  int vb_cache_en_[VENC_MAX_CHN_NUM] = { 0 };
   std::queue<iot_venc_src_buf_t*> vb_src_buf_queue_[VENC_MAX_CHN_NUM];
   std::queue<iot_venc_stream_buf_t*> vb_stream_buf_queue_[VENC_MAX_CHN_NUM];
 };

@@ -183,6 +183,27 @@ typedef struct HB_VIDEO_FRAME_INFO_S {
    */
   int32_t frame_decoded_index;
 
+  /**
+   * This is the physical start address of corresponding stream buffer.
+   *
+   * - Note:
+   * - Encoding: Unsupport.
+   * - Decoding: Support.
+   * - Default:
+   */
+  uint64_t stream_start_addr;
+
+ /**
+  * This is the size of corresponding stream buffer.
+  *
+  * - Note:
+  * - Encoding: Unsupport.
+  * - Decoding: Support.
+  * - Default:
+  */
+	int32_t stream_size;
+
+
   /* This is the picture type of decoded picture.
    * @see HB_h264_nal_unit_type_t
    * @see HB_h265_nal_unit_type_t
@@ -334,6 +355,26 @@ typedef struct HB_VIDEO_FRAME_INFO_JPEG_S {
    */
   int32_t frame_display_index;
 
+  /**
+   * This is the physical start address of corresponding stream buffer.
+   *
+   * - Note:
+   * - Encoding: Unsupport.
+   * - Decoding: Support.
+   * - Default:
+   */
+  uint64_t stream_start_addr;
+
+ /**
+  * This is the size of corresponding stream buffer.
+  *
+  * - Note:
+  * - Encoding: Unsupport.
+  * - Decoding: Support.
+  * - Default:
+  */
+	int32_t stream_size;
+
   /* JPEG error restart index. It's valid only if decode_result is success.
    *
    * - Note:
@@ -401,7 +442,10 @@ typedef struct HB_VIDEO_PACK_S {
 
 typedef struct HB_VIDEO_STREAM_INFO_S {
   HB_BOOL frame_index;
+  uint64_t frame_start_addr;
+  int32_t frame_size;
   int32_t nalu_type;
+  uint32_t slice_idx;
   uint32_t slice_num;
   uint32_t dependent_slice_num;
   uint32_t independent_slice_num;
@@ -420,6 +464,10 @@ typedef struct HB_VIDEO_STREAM_INFO_S {
 } VIDEO_STREAM_INFO_S;
 
 typedef struct HB_VIDEO_STREAM_INFO_JPEG_S {
+  uint64_t frame_start_addr;
+	int32_t frame_size;
+	uint32_t slice_idx;
+	uint32_t slice_num;
   uint32_t frame_cycle;
 } VIDEO_STREAM_INFO_JPEG_S;
 

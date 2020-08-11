@@ -673,7 +673,6 @@ int FilterMethod::BodyValid(const int &input_size,
     } else if ("landmark" == data_info.type) {
       auto lmk = std::static_pointer_cast<XStreamLandmarks>(
           input_slot[i]->datas_[idx]);
-      LOGE << "body filter method:";
       if (lmk->state_ == DataState::VALID) {
         lmk_pass = LmkVerification(lmk);
         if (!lmk_pass) {

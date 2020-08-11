@@ -44,15 +44,15 @@ HCanvas.prototype.drawFloatMask = function (
 ) {
   let width = (floatWH.p2.x - floatWH.p1.x) / w
   let height = (floatWH.p2.y - floatWH.p1.y) / h
-  
+
   let x = floatWH.p1.x
   let y = floatWH.p1.y
   data.map((item, ind) => {
     item.map((val, key) => {
       if (val > 0) {
         this.drawFill1(
-          {x: x + width * key, y: y + height * ind},
-          {x: x + width * (key + 1) , y: y + height * (ind + 1)},
+          { x: x + width * key, y: y + height * ind },
+          { x: x + width * (key + 1), y: y + height * (ind + 1) },
           {
             fillColor: 'rgba(0, 255, 55, 0.5)'
           }
@@ -102,10 +102,10 @@ HCanvas.prototype.drawFloatMatrixs = function (
   canvas.height = h;
   var imgData = ctx.getImageData(x, y, w, h);
   for (var i = 0; i < data.length; i += 4) {
-    imgData.data[i]= data[i];
-    imgData.data[i + 1]= data[i + 1];
-    imgData.data[i + 2]= data[i + 2];
-    imgData.data[i + 3]= data[i + 3];
+    imgData.data[i] = data[i];
+    imgData.data[i + 1] = data[i + 1];
+    imgData.data[i + 2] = data[i + 2];
+    imgData.data[i + 3] = data[i + 3];
   }
   ctx.putImageData(imgData, x, y);
 };
@@ -206,6 +206,36 @@ HCanvas.prototype.drawLine = function (p1, p2, option) {
   context.strokeStyle = strokeColor;
   context.stroke();
 };
+HCanvas.prototype.drawLine2 = function (p1, points, option) {
+  option = option || {};
+
+  var lineWidth = option.lineWidth || 4;
+  var strokeColor = option.strokeColor || '#0FF';
+  var context = this.context;
+
+  context.beginPath();
+
+  const minScore = 0.3;
+  points.forEach((item, index) => {
+    if (item.score > minScore) {
+      if (index === 0) {
+        context.moveTo(p1.x, p1.y);
+        context.lineTo(item.x, item.y);
+        if (points[index + 1].score > minScore) {
+          context.lineTo(points[index + 1].x, points[index + 1].y);
+        }
+      } else if (index < points.length - 1 && points[index + 1].score > minScore) {
+        context.moveTo(item.x, item.y);
+        context.lineTo(points[index + 1].x, points[index + 1].y);
+      }
+    }
+  })
+
+  context.lineWidth = lineWidth;
+  context.strokeStyle = strokeColor;
+  context.stroke();
+  context.closePath();
+}
 
 HCanvas.prototype.drawPoint = function (x, y, option) {
   var context = this.context;
@@ -303,8 +333,8 @@ HCanvas.prototype.drawCorner = function (
 
 HCanvas.prototype.drawBodyBox = function (p1, p2, color) {
   var color = color || [0, 204, 187]
-  var colorBorder = `rgb(${color[0]}, ${color[1]}, ${color[2]}, 0.8)` 
-  var colorFill = `rgb(${color[0]}, ${color[1]}, ${color[2]}, 0.1)` 
+  var colorBorder = `rgb(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`
+  var colorFill = `rgb(${color[0]}, ${color[1]}, ${color[2]}, 0.1)`
 
   var lineWidth = 2;
   var strokeColor = colorBorder;
@@ -507,7 +537,7 @@ HCanvas.prototype.drawHeadBoxByImage = function (p1, p2, id) {
 };
 
 HCanvas.prototype.drawImage = function (p1, p2, img) {
-  if(this.imgs[img]){
+  if (this.imgs[img]) {
     var context = this.context;
     var headW = Math.abs(p2.x - p1.x);
     var headH = Math.abs(p2.y - p1.y);
@@ -713,6 +743,28 @@ HCanvas.prototype.drawSkeleton = function (points) {
   });
 };
 
+HCanvas.prototype.drawHandSkeleton = function (points) {
+  if (!points[0]) return
+
+  const minScore = 0.3;
+  const color = ['#f00', '#0f0', '#00f', '#f0f', '#ff0']
+	points.forEach((item, i) => {
+    if(item.score > minScore) {
+      this.drawPoint(item.x, item.y, {
+        radius: 3,
+        lineWidth: 6
+      });
+    }
+    if (i > 0 && i % 4 === 0) {
+      this.drawLine2(
+        points[0],
+        [ points[i-3], points[i-2], points[i-1], points[i] ],
+        { lineWidth: 5, strokeColor: color[i / 4 - 1] }
+      );
+    }
+  });
+};
+
 HCanvas.prototype.drawSegment = function (imageData, x, y) {
   var context = this.context;
   // var imageData = context.createImageData(width, height);
@@ -727,24 +779,24 @@ HCanvas.prototype.drawSegment = function (imageData, x, y) {
 };
 
 /**
- * 绘制人体轮廓并填充（轮廓数据为相对数据，需加上绝对位置）
+ * 绘制人体轮廓并填充（轮廓数据为相对数据，坐标点为绝对位置）
  */
 HCanvas.prototype.drawSegmentBorder = function (
   imageData,
-  x,
-  y,
+  // x,
+  // y,
   color = 'rgba(255, 255, 0, 0.2)'
 ) {
   var ctx = this.context;
   ctx.beginPath();
-  if(!imageData) {
+  if (!imageData) {
     return
   }
   imageData.forEach((point, index) => {
     if (index === 0) {
-      ctx.moveTo(point.x_ + x, point.y_ + y);
+      ctx.moveTo(point.x_, point.y_);
     } else {
-      ctx.lineTo(point.x_ + x, point.y_ + y);
+      ctx.lineTo(point.x_, point.y_);
     }
   });
   ctx.fillStyle = color;
@@ -1004,7 +1056,7 @@ HCanvas.prototype.drawArrow = function (
   context.restore();
 };
 
-HCanvas.prototype.drawFillScreen = function(){
+HCanvas.prototype.drawFillScreen = function () {
   var ctx = this.context;
   ctx.beginPath();
   ctx.fillStyle = 'pink';

@@ -36,6 +36,11 @@ int32_t ActPostPredictor::Init(std::shared_ptr<CNNMethodConfig> config) {
   PostPredictor::Init(config);
   threshold_ = config->GetFloatValue("threshold");
   groups_str_ = config->GetSTDStringValue("merge_groups");
+  std::string s_out_type = config->GetSTDStringValue("output_type");
+  auto out_type = g_lmkseq_output_map.find(s_out_type);
+  HOBOT_CHECK(out_type != g_lmkseq_output_map.end())
+      << "output type " << s_out_type << " not support";
+  output_type_ = out_type->second;
   target_group_ = config->GetIntValue("target_group_idx");
   size_t delimiter = std::string::npos;
   size_t sub_delimiter = std::string::npos;
@@ -82,6 +87,12 @@ int32_t ActPostPredictor::Init(std::shared_ptr<CNNMethodConfig> config) {
   }
   HOBOT_CHECK(merge_groups_.size() != 0) << "Failed to parse merge groups";
   HOBOT_CHECK(merge_groups_[0].size() != 0) << "Empty group";
+  auto dump_output_feat_env = getenv("dump_output_feature");
+  if (dump_output_feat_env) {
+    en_dump_feature_ = std::stoi(dump_output_feat_env);
+  } else {
+    en_dump_feature_ = 0;
+  }
   return 0;
 }
 
@@ -102,13 +113,34 @@ void ActPostPredictor::Do(CNNMethodRunData *run_data) {
       RUN_PROCESS_TIME_PROFILER(model_name_ + "_post");
       RUN_FPS_PROFILER(model_name_ + "_post");
 
+      if (en_dump_feature_) {
+        std::fstream raw_score_file, pred_ret_file;
+        raw_score_file.open("act_raw_score.txt", std::ios_base::app);
+        pred_ret_file.open("pred_ret.txt", std::ios_base::app);
+        raw_score_file << "[";
+        pred_ret_file << "[";
+      }
       for (int dim_idx = 0; dim_idx < dim_size; dim_idx++) {  // loop target
         auto &target_mxnet = mxnet_output[dim_idx];
         if (target_mxnet.size() == 0) {
+          if (en_dump_feature_) {
+            std::fstream raw_score_file, pred_ret_file;
+            raw_score_file.open("act_raw_score.txt", std::ios_base::app);
+            raw_score_file << "[]";
+            pred_ret_file.open("pred_ret.txt", std::ios_base::app);
+            pred_ret_file << "[-1]";
+          }
           setVaule(batch_output, DefaultVaule(output_slot_size_));
         } else {
-          setVaule(batch_output, TargetPro(target_mxnet));
+          setVaule(batch_output, TargetPro(target_mxnet, dim_idx, dim_size));
         }
+      }
+      if (en_dump_feature_) {
+        std::fstream raw_score_file, pred_ret_file;
+        raw_score_file.open("act_raw_score.txt", std::ios_base::app);
+        raw_score_file << "]\n";
+        pred_ret_file.open("pred_ret.txt", std::ios_base::app);
+        pred_ret_file << "]\n";
       }
     }
   }
@@ -126,44 +158,102 @@ std::vector<BaseDataPtr> ActPostPredictor::DefaultVaule(int size) {
 }
 
 std::vector<BaseDataPtr> ActPostPredictor::TargetPro(
-    const std::vector<std::vector<int8_t>> &mxnet_outs) {
+    const std::vector<std::vector<int8_t>> &mxnet_outs,
+    int dim_idx, int dim_size) {
   std::vector<BaseDataPtr> vals;
-  // softmax, merge by group, return target group
+  // softmax, merge by group
+  // fall: return target group, gesture: return max index
   for (size_t i = 0; i < mxnet_outs.size(); ++i) {
     auto mxnet_out = reinterpret_cast<const float *>(mxnet_outs[i].data());
     uint32_t model_output_size = mxnet_outs[i].size() / 4;
     std::vector<float> model_outs;
     model_outs.resize(model_output_size);
     float max_score = mxnet_out[0], sum_score = 0;
+    std::fstream raw_score_file;
+    if (en_dump_feature_) {
+      std::fstream raw_score_file;
+      raw_score_file.open("act_raw_score.txt", std::ios_base::app);
+      raw_score_file << "[";
+    }
     for (size_t idx = 0; idx < model_output_size; ++idx) {
       model_outs[idx] = mxnet_out[idx];
+      if (en_dump_feature_) {
+        std::fstream raw_score_file;
+        raw_score_file.open("act_raw_score.txt", std::ios_base::app);
+        raw_score_file << model_outs[idx];
+        if (idx != model_output_size - 1) {
+          raw_score_file << ", ";
+        }
+      }
       if (mxnet_out[idx] > max_score) {
         max_score = mxnet_out[idx];
+      }
+    }
+    if (en_dump_feature_) {
+      std::fstream raw_score_file;
+      raw_score_file.open("act_raw_score.txt", std::ios_base::app);
+      raw_score_file << "]";
+      if (dim_idx != dim_size - 1) {
+        raw_score_file << ", ";
       }
     }
     for (auto &item : model_outs) {
       item = std::exp(item - max_score);
       sum_score += item;
     }
-    std::vector<float> fall_rets(merge_groups_.size(), 0);
+    std::vector<float> act_rets(merge_groups_.size(), 0);
+    float max_group_score = 0;
+    size_t max_group_index = -1;
     for (size_t g_idx = 0; g_idx < merge_groups_.size(); ++g_idx) {
       for (size_t idx = 0; idx < merge_groups_[g_idx].size(); ++idx) {
-        fall_rets[g_idx] += model_outs[merge_groups_[g_idx][idx]] / sum_score;
+        act_rets[g_idx] += model_outs[merge_groups_[g_idx][idx]] / sum_score;
+      }
+      if (act_rets[g_idx] > max_group_score) {
+        max_group_score = act_rets[g_idx];
+        max_group_index = g_idx;
       }
     }
-    auto fall_ret =
+    auto act_ret =
         std::make_shared<XStreamData<hobot::vision::Attribute<int>>>();
-    fall_ret->value.score = fall_rets[target_group_];
-    if (fall_rets[target_group_] >= threshold_) {
-      fall_ret->value.value = 1;
-    } else if (fall_rets[target_group_] > 0 &&
-               fall_rets[target_group_] < threshold_) {
-      fall_ret->value.value = 0;
-    } else {
-      fall_ret->value.value = -1;
+    if (output_type_ == LmkSeqOutputType::FALL) {
+      // fall detection result
+      // 0: negative, 1: positive, -1: invalid
+      act_ret->value.score = act_rets[target_group_];
+      if (act_rets[target_group_] >= threshold_) {
+        act_ret->value.value = 1;
+      } else if (act_rets[target_group_] > 0 &&
+                act_rets[target_group_] < threshold_) {
+        act_ret->value.value = 0;
+      } else {
+        act_ret->value.value = -1;
+      }
+    } else if (output_type_ == LmkSeqOutputType::GESTURE) {
+      // gesture recognition result
+      // 0: No Gesture, 1: Pointing with One Finger, 2: Pointing with Two Finger
+      // 3: Click with One Finger, 4: Clich with two Finger, 5: Throw Up
+      // 6: Throw Down, 7: Throw Left, 8: Throw Right, 9: Open Twice
+      // 10: Double Click with One Finger, 11: Double Click with Two Finger
+      // 12: Zoom In, 13: Zoom Out
+      if (max_group_score >= threshold_) {
+        act_ret->value.value = max_group_index;
+        act_ret->value.score = max_group_score;
+      } else {
+        act_ret->value.value = 0;
+        act_ret->value.score = max_group_score;
+      }
     }
-    vals.push_back(std::static_pointer_cast<BaseData>(fall_ret));
-    LOGD << "idx: " << i << " fall: " << fall_ret->value.score;
+    vals.push_back(std::static_pointer_cast<BaseData>(act_ret));
+    LOGD << "idx: " << i << " act_value: " << act_ret->value.value
+         << " act_score: " << act_ret->value.score;
+    if (en_dump_feature_) {
+      std::fstream pred_ret_file;
+      pred_ret_file.open("pred_ret.txt", std::ios_base::app);
+      pred_ret_file << "[" << act_ret->value.value << ", "
+                    << act_ret->value.score << "]";
+      if (dim_idx != dim_size - 1) {
+        pred_ret_file << ", ";
+      }
+    }
   }
   return vals;
 }

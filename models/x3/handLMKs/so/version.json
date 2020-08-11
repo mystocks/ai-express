@@ -1,0 +1,27 @@
+{
+	"hbdk_info": {
+		"cmake_build_type": " releasewithassert",
+		"git_branch": " TC3.4.0",
+		"git_version": " 3ca1533",
+		"release_type": " public",
+		"runtime version": " 3.5.3",
+		"supported_march": " bernoulli, bernoulli2, ",
+		"version": " 3.7.10"
+	},
+	"pub_model_info": {
+		"pub_model_name": "handLMKs",
+		"pub_version": "v0.0.1",
+		"models_list": [
+			{
+				"model_name": "handLMKs",
+				"version": "v0.0.1",
+				"output_model_name": "handLMKs.hbm",
+				"hbm_md5": "6dbe23b165a009554e4ee750d356ec3c",
+				"model_json_file": "/gpfs/plat_aidi/model/2316/IntInference/handpoints.json",
+				"json_file_md5": "a2f000ca4e9620847b3fc9518be646d7",
+				"model_param_file": "/gpfs/plat_aidi/model/2316/IntInference/handpoints.params",
+				"param_file_md5": "188bc94cd1bed7b12a5fb27e252e02dd"
+			}
+		]
+	}
+}

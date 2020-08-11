@@ -25,6 +25,14 @@
 
 #include "vioplugin/viomessage.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "uvc/camera.h"
+#ifdef __cplusplus
+}
+#endif
+
 #define kHorizonVisionXProtoOffset 1200
 
 namespace horizon {
@@ -195,6 +203,40 @@ class VideoFeedbackProduce : public VioProduce {
   int Run() override;
 };
 
+class UsbCam : public VioProduce {
+ public:
+  UsbCam() = delete;
+  explicit UsbCam(const char *vio_cfg_file);
+  virtual ~UsbCam() { DeInitUvc(); }
+  int Run() override;
+
+ private:
+  int InitUvc(std::string dev_name);
+  int DeInitUvc();
+  camera_t *cam = NULL;
+  int width_ = 1920;
+  int height_ = 1080;
+
+  static void got_frame_handler(struct video_frame *frame, void *user_args);
+/**
+ * convert_yuy2_to_nv12 - image convert from yuy2 to nv12
+ * @in_frame: input frame pointer
+ * @out_frame: output frame pointer
+ * @width: width of the frame
+ * @height: height of the frame
+ *
+ * Pay attention, please prepare the in_frame & out_frame by yourself.
+ * And, make sure the image size is right:
+ * yuy2, width * height * 2
+ * nv12, width * height * 1.5
+ */
+  static int convert_yuy2_to_nv12(void *in_frame, void *out_frame,
+                                  unsigned int width, unsigned int height);
+  // 1080p nv12 image from usb cam
+  static hobot::vision::BlockingQueue<std::shared_ptr<unsigned char>>
+          nv12_queue_;
+  static uint64 nv12_queue_len_limit_;
+};
 }  // namespace vioplugin
 }  // namespace xproto
 }  // namespace vision

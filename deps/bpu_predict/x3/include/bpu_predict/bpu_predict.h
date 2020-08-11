@@ -14,7 +14,7 @@ extern "C" {
 #endif  // __cplusplus
 
 #define BPU_PREDICT_VER_MAJOR 3
-#define BPU_PREDICT_VER_MINOR 6
+#define BPU_PREDICT_VER_MINOR 7
 #define BPU_PREDICT_VER_PATCH 0
 
 typedef void *BPUHandle;

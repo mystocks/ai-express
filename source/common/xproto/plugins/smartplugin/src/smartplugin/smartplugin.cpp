@@ -22,6 +22,7 @@
 #include "xproto/plugin/xpluginasync.h"
 
 #include "hobotxsdk/xstream_sdk.h"
+#include "hobotxstream/profiler.h"
 #include "horizon/vision/util.h"
 #include "horizon/vision_type/vision_error.h"
 #include "horizon/vision_type/vision_type.hpp"
@@ -32,9 +33,10 @@
 #include "xproto_msgtype/protobuf/x2.pb.h"
 #include "smartplugin/convertpb.h"
 #include "xproto_msgtype/protobuf/x3.pb.h"
-#include "xproto_msgtype/protobuf/vehicle.pb.h"
 #include "xproto_msgtype/vioplugin_data.h"
 #include "websocketplugin/attribute_convert/attribute_convert.h"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
 
 namespace horizon {
 namespace vision {
@@ -45,6 +47,8 @@ using horizon::vision::xproto::XPluginAsync;
 using horizon::vision::xproto::XProtoMessage;
 using horizon::vision::xproto::XProtoMessagePtr;
 using horizon::vision::xproto::websocketplugin::AttributeConvert;
+using hobot::vision::BBox;
+using hobot::vision::Segmentation;
 
 using horizon::vision::xproto::basic_msgtype::VioMessage;
 using ImageFramePtr = std::shared_ptr<hobot::vision::ImageFrame>;
@@ -53,6 +57,7 @@ using XStreamImageFramePtr = xstream::XStreamData<ImageFramePtr>;
 using xstream::InputDataPtr;
 using xstream::OutputDataPtr;
 using xstream::XStreamSDK;
+using xstream::XStreamData;
 
 using horizon::iot::Convertor;
 
@@ -679,6 +684,8 @@ std::string CustomSmartMessage::Serialize(int ori_w, int ori_h, int dst_w,
       xstream::XStreamData<hobot::vision::BBox>>> head_box_list;
   std::vector<std::shared_ptr<
       xstream::XStreamData<hobot::vision::BBox>>> body_box_list;
+  std::vector<std::shared_ptr<xstream::XStreamData<hobot::vision::BBox>>>
+      hand_box_list;
   std::map<int, x3::Target*> smart_target;
   for (const auto &output : smart_result->datas_) {
     LOGD << "output name: " << output->name_;
@@ -702,6 +709,8 @@ std::string CustomSmartMessage::Serialize(int ori_w, int ori_h, int dst_w,
           head_box_list.push_back(face_box);
         } else if (prefix == "body") {
           body_box_list.push_back(face_box);
+        } else if (prefix == "hand") {
+          hand_box_list.push_back(face_box);
         } else {
           LOGE << "unsupport box name: " << output->name_;
         }
@@ -710,7 +719,11 @@ std::string CustomSmartMessage::Serialize(int ori_w, int ori_h, int dst_w,
                 smart_target.end()) {  // 新track_id
             auto target = smart_msg->add_targets_();
             target->set_track_id_(face_box->value.id);
-            target->set_type_("person");
+            if (prefix == "hand") {
+              target->set_type_("hand");
+            } else {
+              target->set_type_("person");
+            }
             smart_target[face_box->value.id] = target;
           }
           auto proto_box = smart_target[face_box->value.id]->add_boxes_();
@@ -794,18 +807,57 @@ std::string CustomSmartMessage::Serialize(int ori_w, int ori_h, int dst_w,
           LOGE << "Not found the track_id target";
           continue;
         } else {
-          auto target = smart_target[body_box_list[i]->value.id];
-          auto float_matrix = target->add_float_matrixs_();
-          float_matrix->set_type_("mask");
-          int mask_value_idx = 0;
-          for (int mask_height = 0; mask_height < one_mask->value.height;
-               ++mask_height) {
-            auto float_array = float_matrix->add_arrays_();
-            for (int mask_width = 0; mask_width < one_mask->value.width;
-                 ++mask_width) {
-              float_array->add_value_(one_mask->value.values[mask_value_idx++]);
+          auto body_box = body_box_list[i]->value;
+          int x1 = body_box.x1;
+          int y1 = body_box.y1;
+          int x2 = body_box.x2;
+          int y2 = body_box.y2;
+          auto mask = one_mask->value;
+          int h_w = sqrt(mask.values.size());
+          cv::Mat mask_mat(h_w, h_w, CV_32F);
+
+          for (int h = 0; h < h_w; ++h) {
+            float *ptr = mask_mat.ptr<float>(h);
+            for (int w = 0; w < h_w; ++w) {
+              *(ptr + w) = (mask.values)[h * h_w + w];
             }
           }
+          int width = x2 - x1;
+          int height = y2 - y1;
+          cv::resize(mask_mat, mask_mat, cv::Size(width, height));
+
+          cv::Mat mask_gray(height, width, CV_8UC1);
+          mask_gray.setTo(0);
+          for (int h = 0; h < height; ++h) {
+            uchar *p_gray = mask_gray.ptr<uchar>(h);
+            const float *p_mask = mask_mat.ptr<float>(h);
+            for (int w = 0; w < width; ++w) {
+              if (p_mask[w] > 0) {
+                // 这个点在人体内
+                p_gray[w] = 1;
+              } else {
+              }
+            }
+          }
+          mask_mat.release();
+          std::vector<std::vector<cv::Point>> contours;
+          cv::findContours(mask_gray, contours, cv::noArray(), cv::RETR_CCOMP,
+                           cv::CHAIN_APPROX_NONE);
+          mask_gray.release();
+          auto target = smart_target[body_box_list[i]->value.id];
+          auto Points = target->add_points_();
+          Points->set_type_("mask");
+          for (size_t i = 0; i < contours.size(); i++) {
+            auto one_line = contours[i];
+            for (size_t j = 0; j < one_line.size(); j++) {
+              auto point = Points->add_points_();
+              point->set_x_((contours[i][j].x + x1) * x_ratio);
+              point->set_y_((contours[i][j].y + y1) * y_ratio);
+              point->set_score_(0);
+            }
+          }
+          contours.clear();
+          std::vector<std::vector<cv::Point>>(contours).swap(contours);
         }
       }
     }
@@ -936,7 +988,6 @@ std::string CustomSmartMessage::Serialize(int ori_w, int ori_h, int dst_w,
           LOGE << "Not found the track_id target";
         } else {
           if (fall_vote->state_ != xstream::DataState::VALID) {
-            LOGE << "-1";
             continue;
           }
           auto target = smart_target[body_box_list[i]->value.id];
@@ -1033,6 +1084,112 @@ std::string CustomSmartMessage::Serialize(int ori_w, int ori_h, int dst_w,
         }
       }
     }
+    if (output->name_ == "face_feature") {
+      auto features = dynamic_cast<xstream::BaseDataVector *>(output.get());
+      LOGD << output->name_ << " size: " << features->datas_.size();
+      if (features->datas_.size() != face_box_list.size()) {
+        LOGE << "face feature size: " << features->datas_.size()
+             << ", face_box size: " << face_box_list.size();
+      }
+      for (size_t i = 0; i < features->datas_.size(); ++i) {
+        if (face_box_list[i]->value.id == -1) {
+          continue;
+        }
+        // 查找对应的track_id
+        if (smart_target.find(face_box_list[i]->value.id) ==
+            smart_target.end()) {
+          LOGE << "Not found the track_id target";
+        } else {
+          auto one_person_feature =
+              std::static_pointer_cast<xstream::BaseDataVector>(
+                  features->datas_[i]);
+          auto target = smart_target[face_box_list[i]->value.id];
+          for (size_t idx = 0; idx < one_person_feature->datas_.size(); idx++) {
+            auto one_feature = std::static_pointer_cast<
+                xstream::XStreamData<hobot::vision::Feature>>(
+                one_person_feature->datas_[idx]);
+            if (one_feature->state_ != xstream::DataState::VALID) {
+              LOGE << "-1";
+              continue;
+            }
+            auto feature = target->add_float_arrays_();
+            feature->set_type_(output->name_);
+            for (auto item : one_feature->value.values) {
+              feature->add_value_(item);
+            }
+          }
+        }
+      }
+    }
+    if (output->name_ == "hand_lmk") {
+      lmks = dynamic_cast<xstream::BaseDataVector *>(output.get());
+      LOGD << "hand_lmk size: " << lmks->datas_.size();
+      if (lmks->datas_.size() != hand_box_list.size()) {
+        LOGE << "hand_lmk size: " << lmks->datas_.size()
+             << ", hand_box size: " << hand_box_list.size();
+      }
+      for (size_t i = 0; i < lmks->datas_.size(); ++i) {
+        auto lmk = std::static_pointer_cast<
+            xstream::XStreamData<hobot::vision::Landmarks>>(lmks->datas_[i]);
+        // 查找对应的track_id
+        if (hand_box_list[i]->value.id == -1) {
+          continue;
+        }
+        if (smart_target.find(hand_box_list[i]->value.id) ==
+            smart_target.end()) {
+          LOGE << "Not found the track_id target";
+        } else {
+          auto target = smart_target[hand_box_list[i]->value.id];
+          auto proto_points = target->add_points_();
+          proto_points->set_type_("hand_landmarks");
+          for (size_t i = 0; i < lmk->value.values.size(); ++i) {
+            auto point = proto_points->add_points_();
+            point->set_x_(lmk->value.values[i].x * x_ratio);
+            point->set_y_(lmk->value.values[i].y * y_ratio);
+            point->set_score_(lmk->value.values[i].score);
+            LOGD << "x: " << std::round(lmk->value.values[i].x)
+                 << " y: " << std::round(lmk->value.values[i].y)
+                 << " score: " << lmk->value.values[i].score << "\n";
+          }
+        }
+      }
+    }
+    if (output->name_ == "gesture_vote") {
+      auto gesture_votes =
+          dynamic_cast<xstream::BaseDataVector *>(output.get());
+      LOGD << "gesture_vote size: " << gesture_votes->datas_.size();
+      if (gesture_votes->datas_.size() != hand_box_list.size()) {
+        LOGE << "gesture_vote size: " << gesture_votes->datas_.size()
+             << ", body_box size: " << hand_box_list.size();
+      }
+      for (size_t i = 0; i < gesture_votes->datas_.size(); ++i) {
+        auto gesture_vote = std::static_pointer_cast<
+            xstream::XStreamData<hobot::vision::Attribute<int>>>(
+            gesture_votes->datas_[i]);
+        // 查找对应的track_id
+        if (hand_box_list[i]->value.id == -1) {
+          continue;
+        }
+        if (smart_target.find(hand_box_list[i]->value.id) ==
+            smart_target.end()) {
+          LOGE << "Not found the track_id target";
+        } else {
+          if (gesture_vote->state_ != xstream::DataState::VALID) {
+            LOGE << "-1";
+            continue;
+          }
+          auto target = smart_target[hand_box_list[i]->value.id];
+          auto attrs = target->add_attributes_();
+          attrs->set_type_("gesture");
+          attrs->set_value_(gesture_vote->value.value);
+          attrs->set_score_(gesture_vote->value.score);
+          auto gesture_des = AttributeConvert::Instance().GetAttrDes(
+              "gesture", gesture_vote->value.value);
+          attrs->set_value_string_(gesture_des);
+          LOGD << " " << gesture_vote->value.value << ", des: " << gesture_des;
+        }
+      }
+    }
   }
 
   proto_frame_message.SerializeToString(&proto_str);
@@ -1116,6 +1273,7 @@ int SmartPlugin::Stop() {
     std::ofstream outputFileStream("smart_data.json");
     writer->write(root, &outputFileStream);
   }
+  Profiler::Release();
   LOGI << "SmartPlugin Stop";
   return 0;
 }

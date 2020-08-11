@@ -4,8 +4,9 @@
   "max_vio_buffer": 2,
   "ts_type": "frame_id",
   "file_path": "configs/vio_hg/name.list",
-  "image_list": ["face_body_multisource/configs/images/image-001.jpeg", "face_body_multisource/configs/images/image-002.jpeg"],
+  "image_list": ["face_body_multisource/configs/images/image-001.jpeg", "face_body_multisource/configs/images/image-002.jpeg", "face_body_multisource/configs/images/image-001.jpeg", "face_body_multisource/configs/images/image-002.jpeg"],
   "video_path": "test.avi",
+  "usb_dev_name": "/dev/video8",
   "interval": 20,
   "name_list_loop": 1,
   "pad_width": 1920,
@@ -13,6 +14,7 @@
   "vio_cfg_file": {
     "ipc_camera": "configs/vio/hb_vio.json",
     "panel_camera": "configs/vio/panel_camera.json.x3dev",
+    "usb_cam": "configs/vio/x3dev/iot_vio_x3_1080_fb.json",
     "jpeg_image_list": "configs/vio/x3dev/iot_vio_x3_1080_fb.json",
     "nv12_image_list": "configs/vio/x3dev/iot_vio_x3_1080_fb.json",
     "image": "configs/vio/x3dev/iot_vio_x3_1080_fb.json",

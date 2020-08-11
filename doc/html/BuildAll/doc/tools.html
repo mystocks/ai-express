@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>工具集 &mdash; AI Express用户手册 2.3.0 文档</title>
+  <title>工具集 &mdash; AI Express用户手册 2.4.0 文档</title>
   
 
   
@@ -219,7 +219,7 @@ pip install -e
 <ul class="simple">
 <li><p>性能统计数据类型</p></li>
 </ul>
-<p>目前XStream内支持的性能统计数据包括处理时长（Time）和帧率（FPS）两种。其中函数处理时长的默认统计最小间隔是3000微秒（即3毫秒），若函数处理时间低于3毫秒，则不计入统计范围；帧率的默认统计最小间隔是10微秒，若统计周期小于10微秒，则不计入统计。</p>
+<p>目前XStream内支持的性能统计数据包括处理时长（Time）和帧率（FPS）两种。其中函数处理时长的默认统计最小间隔是3000微秒（即3毫秒），若函数处理时间低于3毫秒，则不计入统计范围；帧率的默认统计最小间隔是200毫秒，若统计周期小于200毫秒，则不计入统计。</p>
 <p>为了支持不同业务场景的处理耗时不同，目前支持用户对统计粒度的修改。</p>
 <p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">SetConfig(const</span> <span class="pre">std::string</span> <span class="pre">&amp;key,</span> <span class="pre">const</span> <span class="pre">std::string</span> <span class="pre">&amp;value)</span></code></p>
 <p>key为”profiler_time_interval”, value为整型数据（单位：微秒）, 表示设置函数处理时长的最小间隔。</p>

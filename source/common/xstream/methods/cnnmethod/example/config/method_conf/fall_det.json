@@ -17,6 +17,7 @@
   "merge_groups" : "[0,4];[1,2,3]",
   "target_group_idx": 1,
   "output_size" : 1,
+  "output_type": "fall",
   "output_names": [
     "fall_chance"
   ]

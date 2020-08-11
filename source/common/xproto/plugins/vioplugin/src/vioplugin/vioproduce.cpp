@@ -115,6 +115,9 @@ std::shared_ptr<VioProduce> VioProduce::CreateVioProduce(
   } else if ("cached_image_list" == data_source) {
     Vio_Produce = std::make_shared<CachedImageList>(
         json["vio_cfg_file"]["cached_image_list"].asCString());
+  } else if ("x2_4k" == data_source) {
+    Vio_Produce = std::make_shared<JpegImageList>(
+        json["vio_cfg_file"]["x2_4k"].asCString());
   } else {
     LOGW << "data source " << data_source << " is unsupported";
   }
@@ -346,6 +349,58 @@ bool GetPyramidInfo(mult_img_info_t *pvio_image, char *data, int len) {
   }
   return true;
 }
+
+bool GetPyramidInfo_4K(img_info_t *pvio_image, char *data) {
+  static int count = 0;
+  std::vector<int> offset_y = {0, 1920, 4147200, 4149120};
+  std::vector<int> offset_c = {0, 1920, 2073600, 2075520};
+
+  src_img_info_t src_img_info;
+  auto ret = hb_vio_get_info(HB_VIO_FEEDBACK_SRC_INFO, &src_img_info);
+  if (ret < 0) {
+    LOGE << "hb_vio_get_info failed";
+    return false;
+  }
+
+  // copy y data
+  auto src_ptr = data + offset_y[count];
+  auto dst_ptr = reinterpret_cast<uint8_t *>(src_img_info.src_img.y_vaddr);
+  auto src_ptr1 = data + 8294400 + offset_c[count];
+  auto dst_ptr1 =
+      reinterpret_cast<uint8_t *>(src_img_info.src_img.y_vaddr + 2073600);
+  for (auto i = 0; i < 1080; i++) {
+    memcpy(dst_ptr, src_ptr, 1920);
+    src_ptr += 3840;
+    dst_ptr += 1920;
+    if (i % 2 == 0) {
+      memcpy(dst_ptr1, src_ptr1, 1920);
+      src_ptr1 += 3840;
+      dst_ptr1 += 1920;
+    }
+  }
+
+  count++;
+  if (count == 4)
+    count = 0;
+
+  ret = hb_vio_set_info(HB_VIO_FEEDBACK_FLUSH, &src_img_info);
+  if (ret < 0) {
+    LOGE << "hb_vio_feedback_flush failed";
+    return false;
+  }
+  ret = hb_vio_pym_process(&src_img_info);
+  if (ret < 0) {
+    LOGE << "hb_vio_pym_process failed";
+    return false;
+  }
+  ret = hb_vio_get_info(HB_VIO_PYM_INFO, pvio_image);
+  if (ret < 0) {
+    LOGE << "hb_vio_pyramid_info failed";
+    return false;
+  }
+  return true;
+}
+
 #ifdef DEBUG
 static int DumpPyramidImage(const addr_info_t &vio_image,
                             const std::string &path) {
@@ -609,6 +664,7 @@ IpcCamera::~IpcCamera() {
 }
 
 ImageList::ImageList(const char *vio_cfg_file) : VioProduce() {
+  LOGW << "vio init file:" << vio_cfg_file;
   auto ret = hb_vio_init(vio_cfg_file);
   HOBOT_CHECK_LE(ret, 0) << "vio init failed";
   ret = hb_vio_start();
@@ -631,8 +687,21 @@ int ImageList::Run() {
 
   // 获得文件名数组
   auto json = config_->GetJson();
+
   // 图像列表文件列表
   auto list_of_img_list = json["file_path"];
+  auto is_4k_obj = json["is_4k"];  // special example for 4K Feedback
+  bool is_4k = false;
+  std::string file_4k = "configs/picture/4k.jpg";
+  HorizonVisionImage *nv12_4k = nullptr;
+  if (!is_4k_obj.isNull()) {
+    is_4k = is_4k_obj.asBool();
+    auto file_4k_obj = json["4k_file"];
+    if (!file_4k_obj.isNull()) {
+      file_4k = file_4k_obj.asString();
+      LOGW << "is_4k:" << is_4k << ", 4k file:" << file_4k;
+    }
+  }
 
   if (list_of_img_list.isNull()) {
     list_of_img_list = Json::Value("");
@@ -681,6 +750,21 @@ int ImageList::Run() {
   std::vector<unsigned int> source_img_cnt;
   source_img_cnt.resize(list_of_img_list.size());
 
+  if (is_4k) {
+    auto image = GetImageFrame(file_4k);
+    if (image) {
+      auto res = PadImage(&image->image, 3840, 2160);
+      HOBOT_CHECK(res == 0)
+          << "Failed to pad image test_4k.jpg";
+      HorizonVisionAllocImage(&nv12_4k);
+      HorizonConvertImage(&image->image, nv12_4k,
+                          kHorizonVisionPixelFormatRawNV12);
+      HorizonVisionFreeImageFrame(image);
+    } else {
+      LOGF << "Open 4K image failed";
+    }
+  }
+
   while (all_img_count > 0 && is_running_) {
     // 循环这些list, 循环读出一个 sid => source id
     for (unsigned int sid = 0; sid < list_of_img_list.size(); sid++) {
@@ -698,20 +782,33 @@ int ImageList::Run() {
       }
 
       // 当前图像的路径
-      image_path = image_source_list[sid][source_img_cnt[sid]++];
-      all_img_count--;
+      if (!is_4k) {
+        image_path = image_source_list[sid][source_img_cnt[sid]++];
+        all_img_count--;
+      }
 
       if (cam_type_ == "mono") {  // 单目
         auto *pvio_image =
             reinterpret_cast<img_info_t *>(std::calloc(1, sizeof(img_info_t)));
 
         // 从 image path 填充pvio image
-        auto ret = FillVIOImageByImagePath(pvio_image, image_path);
+        bool ret = false;
+        if (!is_4k) {
+          ret = FillVIOImageByImagePath(pvio_image, image_path);
+        } else {
+          ret = GetPyramidInfo_4K(pvio_image,
+                            reinterpret_cast<char *>(nv12_4k->data));
+        }
         auto **images = new HorizonVisionImageFrame *[1];
         HorizonVisionImageFrame *image_frame = nullptr;
         HorizonVisionAllocImageFrame(&image_frame);
         if (ret) {
-          image_frame->channel_id = sid;
+          if (!is_4k) {
+            image_frame->channel_id = sid;
+          } else {
+            image_frame->channel_id = frame_id % 4;
+            LOGD << "channel_id: " << image_frame->channel_id;
+          }
           image_frame->frame_id = frame_id++;
           image_frame->time_stamp = pvio_image->timestamp;
           image_frame->image.height = pvio_image->src_img.height;
@@ -749,7 +846,12 @@ int ImageList::Run() {
             HorizonVisionImageFrame *image_frame = nullptr;
             HorizonVisionAllocImageFrame(&image_frame);
             auto pvio = pvio_image->img_info[i];
-            image_frame->channel_id = sid;
+            if (!is_4k) {
+              image_frame->channel_id = sid;
+            } else {
+              image_frame->channel_id = frame_id % 4;
+              LOGD << "channel_id: " << image_frame->channel_id;
+            }
             image_frame->frame_id = frame_id;
             image_frame->time_stamp = pvio.timestamp;
             image_frame->image.height = pvio.src_img.height;

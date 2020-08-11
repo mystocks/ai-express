@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>车路协同方案AP侧Sample &mdash; AI Express用户手册 2.3.0 文档</title>
+  <title>车路协同方案AP侧Sample &mdash; AI Express用户手册 2.4.0 文档</title>
   
 
   
@@ -160,7 +160,8 @@
 <h1>车路协同方案AP侧Sample<a class="headerlink" href="#apsample" title="永久链接至标题">¶</a></h1>
 <div class="section" id="id1">
 <h2>介绍<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
-<p>该Sample提供AP侧基于hbipc bifspi通路的接收样例。程序启动后会请求连接CP端。连接成功后开始接收数据并进行解析。</p>
+<p>该Sample基于x2-ipc提供AP侧使用BT1120发送图像和hbipc bifspi通路数据数据的样例。
+程序启动后会向CP侧发送yuv图像并请求连接CP端。连接成功后开始接收数据并进行解析。</p>
 </div>
 <div class="section" id="id2">
 <h2>编译<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
@@ -173,12 +174,25 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bash</span> <span class="n">deploy</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
-<p>该脚本会在当前目录下创建deploy文件夹，里面包含运行时库和可执行程序。</p>
+<p>该脚本会在当前目录下创建deploy文件夹，其中包含运行时库和可执行程序。
+此外，还包含bif驱动及相关脚本。</p>
 </div>
 <div class="section" id="id4">
 <h2>运行<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <p>将部署包拷贝到板子上，即可运行。</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sh</span> <span class="n">run</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>工具<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<p>部署包tools目录下提供了hbipc-utils工具。使用它可以进行AP-CP间的文件传输，或在AP侧运行命令在CP上。
+运行前需要先加载bif驱动</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span>
+    <span class="n">hbipc</span><span class="o">-</span><span class="n">utils</span> <span class="n">put</span> <span class="n">src_file</span><span class="p">(</span><span class="n">ap</span><span class="p">)</span> <span class="n">dest_file</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span>
+    <span class="n">hbipc</span><span class="o">-</span><span class="n">utils</span> <span class="n">get</span> <span class="n">dest_file</span><span class="p">(</span><span class="n">ap</span><span class="p">)</span> <span class="n">src_file</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span>
+    <span class="n">hbipc</span><span class="o">-</span><span class="n">utils</span> <span class="n">run</span> <span class="s2">&quot;command&quot;</span>
+<span class="n">default</span> <span class="n">use</span> <span class="n">bifspi</span><span class="p">,</span> <span class="n">append</span> <span class="s2">&quot;--bifsd&quot;</span> <span class="n">to</span> <span class="n">use</span> <span class="n">bifsd</span> <span class="k">if</span> <span class="n">HW</span> <span class="n">support</span>
 </pre></div>
 </div>
 </div>

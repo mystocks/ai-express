@@ -19,8 +19,10 @@
 #include "xproto_msgtype/protobuf/x3.pb.h"
 #include "xproto_msgtype/smartplugin_data.h"
 #include "xproto_msgtype/vioplugin_data.h"
+#include "utils/time_helper.h"
 #include "websocketplugin/attribute_convert/attribute_convert.h"
 
+using hobot::Timer;
 namespace horizon {
 namespace vision {
 namespace xproto {
@@ -67,6 +69,12 @@ int WebsocketPlugin::Init() {
                                             std::placeholders::_1));
   // 调用父类初始化成员函数注册信息
   XPluginAsync::Init();
+#ifdef X2
+  jpg_encode_thread_.CreatThread(4);
+#endif
+#ifdef X3
+  jpg_encode_thread_.CreatThread(1);
+#endif
   return 0;
 }
 
@@ -111,12 +119,15 @@ int WebsocketPlugin::Start() {
   rv = manager.EncodeChnStart(chn_);
   HOBOT_CHECK(rv == 0);
   /* 1.6 alloc media codec vb buffer init */
-  int vb_num = frame_buf_depth;
-  int pic_stride = config_->image_width_;
-  int pic_size = pic_stride * pic_height * 3 / 2;  // nv12 format
-  rv = manager.VbBufInit(chn_, pic_width, pic_height, pic_stride,
-          pic_size, vb_num);
-  HOBOT_CHECK(rv == 0);
+  if (config_->use_vb_) {
+    int vb_num = frame_buf_depth;
+    int pic_stride = config_->image_width_;
+    int pic_size = pic_stride * pic_height * 3 / 2;  // nv12 format
+    int vb_cache_enable = 1;
+    rv = manager.VbBufInit(chn_, pic_width, pic_height, pic_stride,
+        pic_size, vb_num, vb_cache_enable);
+    HOBOT_CHECK(rv == 0);
+  }
 #endif
   return 0;
 }
@@ -143,7 +154,9 @@ int WebsocketPlugin::Stop() {
   /* 3.2 media codec chn deinit */
   manager.EncodeChnDeInit(chn_);
   /* 3.3 media codec vb buf deinit */
-  manager.VbBufDeInit(chn_);
+  if (config_->use_vb_) {
+    manager.VbBufDeInit(chn_);
+  }
   /* 3.4 media codec module deinit */
   manager.ModuleDeInit();
 #endif
@@ -167,7 +180,7 @@ int WebsocketPlugin::FeedSmart(XProtoMessagePtr msg) {
   std::unique_lock<std::mutex> lock(map_mutex_);
   std::vector<x3::FrameMessage>::iterator it;
   for (it = x3_frames_.begin(); it != x3_frames_.end();) {
-    if (it->timestamp_() >= smart_msg->time_stamp) {
+    if (it->timestamp_() == smart_msg->time_stamp) {
       msg_send.ParseFromString(protocol);
       msg_send.mutable_img_()->CopyFrom(it->img_());
       x3_frames_.erase(it);
@@ -215,6 +228,12 @@ int WebsocketPlugin::FeedSmart(XProtoMessagePtr msg) {
 }
 
 int WebsocketPlugin::FeedVideo(XProtoMessagePtr msg) {
+  jpg_encode_thread_.PostTask(
+      std::bind(&WebsocketPlugin::EncodeJpg, this, msg));
+  return 0;
+}
+
+void WebsocketPlugin::EncodeJpg(XProtoMessagePtr msg) {
   int rv;
   bool bret;
   cv::Mat yuv_img;
@@ -223,18 +242,23 @@ int WebsocketPlugin::FeedVideo(XProtoMessagePtr msg) {
   std::string smart_result;
 #ifdef X3_MEDIA_CODEC
   iot_venc_src_buf_t *frame_buf = nullptr;
+  iot_venc_src_buf_t src_buf = { 0 };
   iot_venc_stream_buf_t *stream_buf = nullptr;
 #endif
-  std::lock_guard<std::mutex> video_lock(video_mutex_);
-  if (video_stop_flag_) {
-    LOGD << "Aleardy stop, WebsocketPLugin Feedvideo return";
-    return -1;
+  {
+    std::lock_guard<std::mutex> video_lock(video_mutex_);
+    if (video_stop_flag_) {
+      LOGD << "Aleardy stop, WebsocketPLugin Feedvideo return";
+      return;
+    }
   }
+
   img_buf.clear();
   img_buf.reserve(500*1024);
   LOGI << "WebsocketPLugin Feedvideo";
   auto frame = std::dynamic_pointer_cast<VioMessage>(msg);
   VioMessage *vio_msg = frame.get();
+  auto timestamp = frame->time_stamp_;
   // get pyramid size
 #ifdef X2
   auto image = vio_msg->image_[0]->image;
@@ -257,19 +281,30 @@ int WebsocketPlugin::FeedVideo(XProtoMessagePtr msg) {
   /* 2. start encode yuv to jpeg */
   /* 2.1 get media codec vb buf for store src yuv data */
   MediaCodecManager &manager = MediaCodecManager::Get();
-  rv = manager.GetVbBuf(chn_, &frame_buf);
-  HOBOT_CHECK(rv == 0);
+  if (config_->use_vb_) {
+    rv = manager.GetVbBuf(chn_, &frame_buf);
+    HOBOT_CHECK(rv == 0);
+  } else {
+    frame_buf = &src_buf;
+    memset(frame_buf, 0x00, sizeof(iot_venc_src_buf_t));
+  }
   frame_buf->frame_info.pts = frame->time_stamp_;
   /* 2.2 get src yuv data */
-  rv = Convertor::GetYUV(frame_buf, vio_msg, config_->layer_);
+  rv = Convertor::GetYUV(frame_buf, vio_msg, config_->layer_, config_->use_vb_);
   HOBOT_CHECK(rv == 0);
+
 #endif
   if (0 == rv) {
 #ifndef X3_MEDIA_CODEC
     bret = Convertor::YUV2JPG(img_buf, yuv_img, 50);
 #else
     /* 2.3. encode yuv data to jpg */
+    auto ts0 = Timer::current_time_stamp();
     rv = manager.EncodeYuvToJpg(chn_, frame_buf, &stream_buf);
+    if (config_->jpg_encode_time_ == 1) {
+        auto ts1 = Timer::current_time_stamp();
+        LOGW << "******Encode yuv to jpeg cost: " << ts1 - ts0 << "ms";
+    }
     if (rv == 0) {
         bret = true;
         auto data_ptr = stream_buf->stream_info.pstPack.vir_ptr;
@@ -282,16 +317,20 @@ int WebsocketPlugin::FeedVideo(XProtoMessagePtr msg) {
 #endif
 #ifdef X3_MEDIA_CODEC
     /* 2.4 free jpg stream buf */
-    rv = manager.FreeStream(chn_, stream_buf);
-    HOBOT_CHECK(rv == 0);
+    if (stream_buf != nullptr) {
+      rv = manager.FreeStream(chn_, stream_buf);
+      HOBOT_CHECK(rv == 0);
+    }
     /* 2.5 free media codec vb buf */
-    rv = manager.FreeVbBuf(chn_, frame_buf);
-    HOBOT_CHECK(rv == 0);
+    if (config_->use_vb_) {
+      rv = manager.FreeVbBuf(chn_, frame_buf);
+      HOBOT_CHECK(rv == 0);
+    }
 #endif
     if (bret) {
       // todo send image to web
       auto image = x3_frame_msg.mutable_img_();
-      x3_frame_msg.set_timestamp_(frame->time_stamp_);
+      x3_frame_msg.set_timestamp_(timestamp);
       image->set_buf_((const char *)img_buf.data(), img_buf.size());
       image->set_type_("jpeg");
       image->set_width_(dst_image_width_);
@@ -311,7 +350,7 @@ int WebsocketPlugin::FeedVideo(XProtoMessagePtr msg) {
       }
     }
   }
-  return 0;
+  return;
 }
 }  // namespace websocketplugin
 }  // namespace xproto

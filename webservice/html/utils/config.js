@@ -1,4 +1,32 @@
 var Config = {
+  handSkeletonKey: [
+    'moonBone',
+
+    'thumbsMetacarpal',
+    'thumbsProximalPhalanx',
+    'thumbsMiddlePhalanx',
+    'thumbsDistalPhalanx',
+
+    'indexMetacarpal',
+    'indexProximalPhalanx',
+    'indexMiddlePhalanx',
+    'indexDistalPhalanx',
+
+    'middleMetacarpal',
+    'middleProximalPhalanx',
+    'middleMiddlePhalanx',
+    'middleDistalPhalanx',
+
+    'ringMetacarpal',
+    'ringProximalPhalanx',
+    'ringMiddlePhalanx',
+    'ringDistalPhalanx',
+
+    'littleMetacarpal',
+    'littleProximalPhalanx',
+    'littleMiddlePhalanx',
+    'littleDistalPhalanx',
+  ],
   skeletonKey: [
     'nose',
     'leftEye',

@@ -75,26 +75,41 @@ int Convertor::GetYUV(cv::Mat &yuv_img, VioMessage *vio_msg, int level) {
 
 #ifdef X3_MEDIA_CODEC
 int Convertor::GetYUV(iot_venc_src_buf_t *frame_buf, VioMessage *vio_msg,
-        int level) {
+        int level, int use_vb) {
   LOGI << "websocketplugin x3 mediacodec: " << __FUNCTION__;
   if (!vio_msg || vio_msg->num_ == 0)
     return -1;
   auto pym_image = vio_msg->image_[0];
   auto height = pym_image->down_scale[level].height;
   auto width = pym_image->down_scale[level].width;
-  auto y_addr = pym_image->down_scale[level].y_vaddr;
-  auto uv_addr = pym_image->down_scale[level].c_vaddr;
+  auto stride = pym_image->down_scale[level].stride;
+  auto y_vaddr = pym_image->down_scale[level].y_vaddr;
+  auto y_paddr = pym_image->down_scale[level].y_paddr;
+  auto c_vaddr = pym_image->down_scale[level].c_vaddr;
+  auto c_paddr = pym_image->down_scale[level].c_paddr;
   HOBOT_CHECK(height) << "width = " << width << ", height = " << height;
-  auto img_y_size = height * pym_image->down_scale[level].stride;
+  auto img_y_size = height * stride;
   auto img_uv_size = img_y_size / 2;
 
-  HOBOT_CHECK(frame_buf != nullptr);
-  auto img_y_addr = frame_buf->frame_info.vir_ptr[0];
-  auto img_uv_addr = frame_buf->frame_info.vir_ptr[1];
-  HOBOT_CHECK(img_y_addr != NULL);
-  HOBOT_CHECK(img_uv_addr != NULL);
-  memcpy(img_y_addr, reinterpret_cast<uint8_t*>(y_addr), img_y_size);
-  memcpy(img_uv_addr, reinterpret_cast<uint8_t*>(uv_addr), img_uv_size);
+  if (use_vb) {
+    HOBOT_CHECK(frame_buf != nullptr);
+    HOBOT_CHECK(frame_buf->frame_info.vir_ptr[0] != NULL);
+    HOBOT_CHECK(frame_buf->frame_info.vir_ptr[1] != NULL);
+    memcpy(frame_buf->frame_info.vir_ptr[0],
+        reinterpret_cast<uint8_t*>(y_vaddr), img_y_size);
+    memcpy(frame_buf->frame_info.vir_ptr[1],
+        reinterpret_cast<uint8_t*>(c_vaddr), img_uv_size);
+  } else {
+    frame_buf->frame_info.width = width;
+    frame_buf->frame_info.height = height;
+    frame_buf->frame_info.stride = stride;
+    frame_buf->frame_info.size = stride * height * 3 / 2;
+    frame_buf->frame_info.vir_ptr[0] = reinterpret_cast<char *>(y_vaddr);
+    frame_buf->frame_info.phy_ptr[0] = (uint32_t)y_paddr;
+    frame_buf->frame_info.vir_ptr[1] = reinterpret_cast<char *>(c_vaddr);
+    frame_buf->frame_info.phy_ptr[1] = (uint32_t)c_paddr;
+    frame_buf->frame_info.pix_format = HB_PIXEL_FORMAT_NV12;
+  }
 
 #if 0  // dump yuv data
   static bool first = true;

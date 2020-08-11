@@ -8,12 +8,13 @@
 #include "hobotlog/hobotlog.hpp"
 #include "xproto/message/pluginflow/msg_registry.h"
 #include "xproto_msgtype/protobuf/x2.pb.h"
-#include "xproto_msgtype/protobuf/vehicle.pb.h"
+#include "utils/time_helper.h"
 #ifdef X3_MEDIA_CODEC
 #include "media_codec/media_codec_manager.h"
 #endif
 
 
+using hobot::Timer;
 namespace horizon {
 namespace vision {
 namespace xproto {
@@ -151,7 +152,7 @@ int VisualPlugin::EncodeThread() {
   std::vector<uchar> img_buf;
   ioAV::Perception perception;
   std::vector<VisualInput*> frames;
-  
+
   send_data.reserve(1024);
   frames.reserve(cache_size_);
   img_buf.clear();
@@ -160,6 +161,7 @@ int VisualPlugin::EncodeThread() {
 #ifdef X3_MEDIA_CODEC
   /* 1. media codec init */
   iot_venc_src_buf_t *frame_buf = nullptr;
+  iot_venc_src_buf_t src_buf = { 0 };
   iot_venc_stream_buf_t *stream_buf = nullptr;
   /* 1.1 get media codec manager and module init */
   MediaCodecManager &manager = MediaCodecManager::Get();
@@ -180,13 +182,16 @@ int VisualPlugin::EncodeThread() {
   /* 1.5 set media codec venc jpg chn qfactor params */
   rv = manager.EncodeChnStart(chn);
   HOBOT_CHECK(rv == 0);
-  /* 1.6 alloc media codec vb buffer init */
-  int vb_num = frame_buf_depth;
-  int pic_stride = config_->image_width_;
-  int pic_size = pic_stride * pic_height * 3 / 2;  // nv12 format
-  rv = manager.VbBufInit(chn, pic_width, pic_height, pic_stride,
-          pic_size, vb_num);
-  HOBOT_CHECK(rv == 0);
+  if (config_->use_vb_) {
+    /* 1.6 alloc media codec vb buffer init */
+    int vb_num = frame_buf_depth;
+    int pic_stride = config_->image_width_;
+    int pic_size = pic_stride * pic_height * 3 / 2;  // nv12 format
+    int vb_cache_enable = 1;
+    rv = manager.VbBufInit(chn, pic_width, pic_height, pic_stride,
+        pic_size, vb_num, vb_cache_enable);
+    HOBOT_CHECK(rv == 0);
+  }
 #endif
 
   while (!stop_flag_) {
@@ -208,10 +213,16 @@ int VisualPlugin::EncodeThread() {
 #else
         /* 2. start encode yuv to jpeg */
         /* 2.1 get media codec vb buf for store src yuv data */
-        rv = manager.GetVbBuf(chn, &frame_buf);
-        HOBOT_CHECK(rv == 0);
+        if (config_->use_vb_) {
+          rv = manager.GetVbBuf(chn, &frame_buf);
+          HOBOT_CHECK(rv == 0);
+        } else {
+          frame_buf = &src_buf;
+          memset(frame_buf, 0x00, sizeof(iot_venc_src_buf_t));
+        }
         /* 2.2 get src yuv data */
-        rv = Convertor::GetYUV(frame_buf, vframe.get(), config_->layer_);
+        rv = Convertor::GetYUV(frame_buf, vframe.get(), config_->layer_,
+            config_->use_vb_);
         HOBOT_CHECK(rv == 0);
         frame_buf->frame_info.pts = vframe->time_stamp_;
 #endif
@@ -221,7 +232,12 @@ int VisualPlugin::EncodeThread() {
           bret = Convertor::YUV2JPG(img_buf, yuv_img, config_->jpeg_quality_);
 #else
           /* 2.3. encode yuv data to jpg */
+          auto ts0 = Timer::current_time_stamp();
           rv = manager.EncodeYuvToJpg(chn, frame_buf, &stream_buf);
+          if (config_->jpg_encode_time_ == 1) {
+              auto ts1 = Timer::current_time_stamp();
+              LOGI << "******Encode yuv to jpeg cost: " << ts1 - ts0 << "ms";
+          }
           if (rv == 0) {
               bret = true;
               auto data_ptr = stream_buf->stream_info.pstPack.vir_ptr;
@@ -247,8 +263,10 @@ int VisualPlugin::EncodeThread() {
           rv = manager.FreeStream(chn, stream_buf);
           HOBOT_CHECK(rv == 0);
           /* 2.5 free media codec vb buf */
-          rv = manager.FreeVbBuf(chn, frame_buf);
-          HOBOT_CHECK(rv == 0);
+          if (config_->use_vb_) {
+            rv = manager.FreeVbBuf(chn, frame_buf);
+            HOBOT_CHECK(rv == 0);
+          }
 #endif
           if(bret) {
             perception.set_type(frame->type);
@@ -283,7 +301,9 @@ int VisualPlugin::EncodeThread() {
   /* 3.2 media codec chn deinit */
   rv = manager.EncodeChnDeInit(chn);
   /* 3.3 media codec vb buf deinit */
-  rv = manager.VbBufDeInit(chn);
+  if (config_->use_vb_) {
+    rv = manager.VbBufDeInit(chn);
+  }
   /* 3.4 media codec module deinit */
   rv = manager.ModuleDeInit();
 #endif

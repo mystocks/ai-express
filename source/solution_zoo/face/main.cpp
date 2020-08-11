@@ -149,8 +149,16 @@ int main(int argc, char **argv) {
     return 2;
   }
   if (output_plg) {
-    output_plg->Init();
-    output_plg->Start();
+    ret = output_plg->Init();
+    if (ret != 0) {
+      LOGE << "output plugin init failed";
+      return 3;
+    }
+    ret = output_plg->Start();
+    if (ret != 0) {
+      LOGE << "output plugin start failed";
+      return 3;
+    }
   }
   vio_plg->Start();
   smart_plg->Start();

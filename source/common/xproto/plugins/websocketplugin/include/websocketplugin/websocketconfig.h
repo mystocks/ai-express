@@ -65,8 +65,10 @@ class WebsocketConfig {
   uint32_t image_width_, image_height_;
   uint32_t data_buf_size_, packet_size_;
   std::string attr_des_file_;
-  int frame_buf_depth_;
-  int dump_jpg_num_;
+  int frame_buf_depth_ = 0;
+  int dump_jpg_num_ = 0;
+  int jpg_encode_time_ = 0;
+  int use_vb_ = 0;
 };
 
 }  // namespace websocketplugin

@@ -36,7 +36,9 @@ enum HB_VIN_ERROR_CODE {
 	HB_VIN_SEND_PIPERAW_FAIL,
 	HB_VIN_NULL_POINT,
 	HB_VIN_GET_CHNFRAME_FAIL,
-	HB_VIN_GET_DEVFRAME_FAIL
+	HB_VIN_GET_DEVFRAME_FAIL,
+	HB_VIN_MD_ENABLE_FAIL,
+	HB_VIN_MD_DISABLE_FAIL,
 };
 
 typedef enum HB_VIN_DEV_INTF_MODE_E {
@@ -77,6 +79,7 @@ typedef struct HB_VIN_DEV_OUTPUT_DDR_S {
 	// uint32_t mux_out_enable_index;
 	uint32_t stride;
 	uint32_t buffer_num;
+	uint32_t raw_dump_en;
 } VIN_DEV_OUTPUT_DDR_S;
 
 typedef struct HB_VIN_DEV_OUTPUT_ISP_S {
@@ -100,7 +103,6 @@ typedef struct HB_VIN_DEV_INPUT_DDR_ATTR_S {
 } VIN_DEV_INPUT_DDR_ATTR_S;
 
 typedef struct HB_VIN_DEV_ATTR_EX_S {
-	uint32_t enable;
 	uint32_t path_sel;
 	uint32_t roi_top;
 	uint32_t roi_left;
@@ -151,7 +153,7 @@ typedef enum HB_VIN_PIPE_CFA_PATTERN_E {
 
 typedef struct HB_VIN_PIPE_CALIB_S {
 	uint32_t mode;
-	unsigned char *lname;
+	char *lname;
 } VIN_PIPE_CALIB_S;
 
 typedef struct HB_VIN_PIPE_ATTR_S {
@@ -163,6 +165,8 @@ typedef struct HB_VIN_PIPE_ATTR_S {
 	uint32_t   ispBypassEn;
 	uint32_t   ispAlgoState;
 	uint32_t   bitwidth;
+	uint32_t   startX;
+	uint32_t   startY;
 	VIN_PIPE_CALIB_S calib;
 } VIN_PIPE_ATTR_S;
 
@@ -307,10 +311,13 @@ extern int HB_VIN_SetDevAttrEx(uint32_t devId, const VIN_DEV_ATTR_EX_S
 extern int HB_VIN_GetDevAttrEx(uint32_t devId, VIN_DEV_ATTR_EX_S
 *stVinDevAttrEx);
 
+extern int HB_VIN_EnableDevMd(uint32_t devId);
+extern int HB_VIN_DisableDevMd(uint32_t devId);
+
 extern int HB_VIN_EnableDev(uint32_t devId);
 extern int HB_VIN_DisableDev(uint32_t devId);
 extern int HB_VIN_DestroyDev(uint32_t devId);
-extern int HB_VIN_GetDevFrame(uint32_t devId, uint32_t chnId, 
+extern int HB_VIN_GetDevFrame(uint32_t devId, uint32_t chnId,
 		void *videoFrame, int32_t millSec);
 extern int HB_VIN_ReleaseDevFrame(uint32_t devId, uint32_t chnId, void *buf);
 
@@ -326,6 +333,8 @@ extern int HB_VIN_GetPipeAttr(uint32_t pipeId,
          VIN_PIPE_ATTR_S *stVinPipeAttr);
 extern int HB_VIN_StartPipe(uint32_t pipeId);
 extern int HB_VIN_StopPipe(uint32_t pipeId);
+extern int HB_VIN_SharePipeAE(uint32_t sharerPipeId, uint32_t userPipeId);
+extern int HB_VIN_CancelSharePipeAE(uint32_t sharerPipeId);
 extern int HB_VIN_DestroyPipe(uint32_t pipeId);
 extern int HB_VIN_EnableChn(uint32_t pipeId, uint32_t chnId);
 extern int HB_VIN_DisableChn(uint32_t pipeId, uint32_t chnId);
@@ -340,8 +349,8 @@ extern int HB_VIN_GetChnFrame(uint32_t pipeId,
 extern int HB_VIN_ReleaseChnFrame(uint32_t pipeId,
         uint32_t chnId, void *pstVideoFrame);
 
-extern int HB_VIN_SetMipiBindDev(uint32_t devId, uint32_t MipiIdx);
-extern int HB_VIN_GetMipiBindDev(uint32_t devId, uint32_t *MipiIdx);
+extern int HB_VIN_SetMipiBindDev(uint32_t devId, uint32_t mipiIdx);
+extern int HB_VIN_GetMipiBindDev(uint32_t devId, uint32_t *mipiIdx);
 
 extern int HB_VIN_SetDevBindPipe(uint32_t devId, uint32_t pipeId);
 extern int HB_VIN_GetDevBindPipe(uint32_t devId, uint32_t *pipeId);
@@ -361,7 +370,7 @@ extern int HB_VIN_InitLens(uint32_t pipeId, VIN_LENS_FUNC_TYPE_E lensType,
 	const VIN_LENS_CTRL_ATTR_S *lenCtlAttr);
 extern int HB_VIN_DeinitLens(uint32_t pipeId);
 
-extern void HB_VIN_RegisterDisCallback(uint32_t pipeId,
+extern int HB_VIN_RegisterDisCallback(uint32_t pipeId,
 	VIN_DIS_CALLBACK_S *pstDISCallback);
 
 

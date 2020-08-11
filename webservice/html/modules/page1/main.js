@@ -1,9 +1,11 @@
 function RenderFrame1(canvasObj, canvasOjb2, videoId) {
   this.videoId = videoId;
   this.imgMain = document.getElementById(videoId);
-  
+
   this.smartCanvas = new HCanvas(canvasObj);
-  this.smartCanvas1 = new HCanvas(canvasOjb2);
+  this.smartCanvas2 = new HCanvas(canvasOjb2);
+
+  // this.openCVLoad = false
 }
 
 /**
@@ -11,11 +13,12 @@ function RenderFrame1(canvasObj, canvasOjb2, videoId) {
  * @param {*} frame
  */
 RenderFrame1.prototype.render = function (frame) {
-  if(frame.imageBlob) {
+  // this.openCVLoad = frame.openCVLoad
+  if (frame.imageBlob) {
     let obj = this.smartCanvas.getImageWH()
     if (obj.w !== frame.imageWidth || obj.h !== frame.imageHeight) {
       this.smartCanvas.changeImageWH(frame.imageWidth, frame.imageHeight);
-      this.smartCanvas1.changeImageWH(frame.imageWidth, frame.imageHeight);
+      this.smartCanvas2.changeImageWH(frame.imageWidth, frame.imageHeight);
     }
     this.canvasOffset = this.calculateOffset(frame.imageWidth, frame.imageHeight);
     var urlCreator = window.URL || window.webkitURL;
@@ -27,7 +30,7 @@ RenderFrame1.prototype.render = function (frame) {
       }, 10);
     });
   }
-  if(frame.performance.length > 0) {
+  if (frame.performance.length > 0) {
     this.renderPerformanceData(frame.performance);
   }
 }
@@ -40,7 +43,7 @@ RenderFrame1.prototype.render = function (frame) {
 RenderFrame1.prototype.renderPerformanceData = function (performance) {
   let performanceHtml = document.querySelector('#performance-message');
   let html = '';
-  performance.map((item) =>{
+  performance.map((item) => {
     html += `<li>${item['type_']}: ${item['valueString_']}</li>`
   })
   performanceHtml.innerHTML = html;
@@ -56,31 +59,30 @@ RenderFrame1.prototype.renderVideo = function (imageUrl, frame) {
   var _this = this
   imgMain.src = imageUrl;
   imgMain.onload = function () {
-    _this.renderFrameStart(frame.smartMsgData, frame.messageShowSelect);
+    _this.renderFrameStart(frame);
   }
 }
 
-RenderFrame1.prototype.renderFrameStart = function (smartMsgData, messageShowSelect) {
+RenderFrame1.prototype.renderFrameStart = function ({ smartMsgData, imageWidth, imageHeight }) { // frame
   this.smartCanvas.clear();
-  this.smartCanvas1.clear();
+  this.smartCanvas2.clear();
+  let parentContainer = document.querySelector('.info-panel-1');
+  let parentContainerAlertHtml = document.querySelector('.info-panel-2');
+  parentContainer.innerHTML = '';
+  parentContainerAlertHtml.innerHTML = '';
   if (smartMsgData.length > 0) {
-    let parentContainer = document.querySelector('.info-panel-1');
-    let parentContainerAlertHtml = document.querySelector('.info-panel-2');
-    let htmls = ''
-    let htmls2 = ''
-    // console.log(smartMsgData)
+    let htmls = '';
+    let htmls2 = '';
     smartMsgData.map(item => {
       if (item.boxes.length > 0) {
-        let fall = false
         // let box = item.boxes.filter(obj => obj.type === 'body')
-        if (typeof item.attributes !== 'undefined') { //  && messageShowSelect.points
-          htmls += this.renderAttributes(item.attributes, item.boxes[0])
-          if (typeof item.attributes.fall !== 'undefined') {
-            fall = true
-            htmls2 += this.createAlertHtml(item.attributes.fall, item.boxes[0]);
-          }
-        }
-        this.renderFrameBoxes(item.boxes, fall);
+        this.renderFrameBoxes(item.boxes, item.fall.fallShow);
+      }
+      if (typeof item.attributes !== 'undefined') {
+        htmls += this.renderAttributes(item.attributes, imageWidth, imageHeight)
+      }
+      if (item.fall.fallShow) {
+        htmls2 += this.createAlertHtml(item.fall, imageWidth, imageHeight);
       }
       if (item.subTargets.boxes.length > 0) {
         this.renderFrameBoxes(item.subTargets.boxes);
@@ -89,7 +91,6 @@ RenderFrame1.prototype.renderFrameStart = function (smartMsgData, messageShowSel
         this.renderFramePoints(item.points)
       }
       if (typeof item.floatMatrixs !== 'undefined') {
-        // console.log(item.floatMatrixs)
         if (item.floatMatrixs.type === 'segmentation') {
           this.floatMatrixs(item.floatMatrixs)
         } else if (item.floatMatrixs.type === 'mask') {
@@ -116,7 +117,14 @@ RenderFrame1.prototype.renderFrameBoxes = function (boxes, fall) {
 // 渲染骨骼线
 RenderFrame1.prototype.renderFramePoints = function (points) {
   points.map(item => {
-    this.smartCanvas.drawSkeleton(item.skeletonPoints);
+    switch (item.type) {
+      case "hand_landmarks":
+        this.smartCanvas.drawHandSkeleton(item.skeletonPoints);
+        break;
+      default:
+        this.smartCanvas.drawSkeleton(item.skeletonPoints);
+        break;
+    }
   })
 }
 
@@ -143,11 +151,21 @@ RenderFrame1.prototype.calculateOffset = function (width, height) {
 RenderFrame1.prototype.createTemplateAttributesHtml = function (attributes, className, top, left) {
   let html = `<li class="${className}" style="top:${top}; left:${left}"><ol>`
   if (typeof attributes.type !== 'undefined') {
-    html += `<li class="${attributes.typ}">${attributes.type}</li>`
+    html += `<li class="${attributes.type}">${attributes.type}
+      ${typeof attributes.score !== 'undefined' && attributes.score > 0
+        ? ':' + attributes.score.toFixed(3) : ''}
+    </li>`
   }
+  // if (typeof attributes.score !== 'undefined' && attributes.score > 0) {
+  //   html += `<li class="${attributes.score}">${attributes.score.toFixed(3)}</li>`
+  // }
   if (attributes.attributes.length > 0) {
     attributes.attributes.map(val => {
-      html += `<li class="${val.type}">${val.type}: ${val.value || ''}</li>`;
+      // console.log(val)
+      html += `<li class="${val.type}">${val.type}: ${val.value || ''}
+        ${typeof val.score !== 'undefined' && val.score > 0
+          ? '(' + val.score.toFixed(3) + ')' : ''}
+      </li>`;
     });
   }
   html += '</ol></li>'
@@ -155,34 +173,38 @@ RenderFrame1.prototype.createTemplateAttributesHtml = function (attributes, clas
 }
 
 // 渲染属性框
-RenderFrame1.prototype.renderAttributes = function (attributes, box) {
-  let htmls = '';
-  // if (box.p1.y <= 1) {
-  //   return;
-  // }
-  let boxWidth = box.p2.x - box.p1.x;
-  let className = '';
-  if (boxWidth * this.canvasOffset.xScale > 120) {
-    className = 'attribute-panel large';
-  } else if (boxWidth * this.canvasOffset.xScale < 80) {
-    className = 'attribute-panel small';
-  } else {
-    className = 'attribute-panel';
+RenderFrame1.prototype.renderAttributes = function (attributes, w, h) {
+  if (typeof attributes.box === 'undefined') {
+    return
   }
-  // let x = box.p2.x - box.p1.x
+  let box = attributes.box;
+  let height = this.imgMain.offsetHeight
+  // let width = this.imgMain.offsetWidth
+  let len = attributes.attributes.length;
+  if (typeof attributes.type !== 'undefined') {
+    len += 1;
+  }
+  // if (typeof attributes.score !== 'undefined' && attributes.score > 0) {
+  //   len += 1;
+  // }
+  // console.log(11111, width, height, len * 25);
+  let className = 'attribute-panel small';
   let y = box.p2.y * this.canvasOffset.yScale - box.p1.y * this.canvasOffset.yScale
-  let left = box.p1.x * this.canvasOffset.xScale + 'px';
-  let top = box.p1.y * this.canvasOffset.yScale + y + 3 + 'px';
-  let html = this.createTemplateAttributesHtml(attributes, className, top, left);
-  htmls += html;
-  return htmls
+  let left = box.p1.x * this.canvasOffset.xScale;
+  let top = box.p1.y * this.canvasOffset.yScale + y + 3;
+
+  if (top + len * 25 >= height) {
+    top = top - len * 25 - 5
+  }
+  let html = this.createTemplateAttributesHtml(attributes, className, top + 'px', left + 'px');
+  return html
 }
 
 RenderFrame1.prototype.createTemplateAlertHtml = function (score, top, left) {
   let html = `<li class="alert" style="top:${top}; left:${left}">
     <p class="img"><img src="../assets/images/danger.png" width="16px" alt=""/>有人摔倒啦</p>
   `
-  if(typeof score !== 'undefined') {
+  if (typeof score !== 'undefined' && score > 0) {
     html += `<p>score: ${score.toFixed(3)}</p>`;
   }
   html + `</li>`
@@ -190,10 +212,14 @@ RenderFrame1.prototype.createTemplateAlertHtml = function (score, top, left) {
 }
 
 // 摔倒弹窗提示
-RenderFrame1.prototype.createAlertHtml = function (fall, box) {
+RenderFrame1.prototype.createAlertHtml = function (fall, w, h) {
+  if (typeof fall.box === 'undefined') {
+    return
+  }
+  let box = fall.box
   // let parentContainer = document.querySelector('.info-panel-2');
   let html = ''
-  if(fall.value === 1) {
+  if (fall.value === 1) {
     if (box.p1.y <= 1) {
       return;
     }
@@ -209,20 +235,29 @@ RenderFrame1.prototype.createAlertHtml = function (fall, box) {
 // 全图分割
 RenderFrame1.prototype.floatMatrixs = function (floatMatrixs) {
   if (typeof floatMatrixs.data !== 'undefined') {
-    this.smartCanvas1.drawFloatMatrixs(floatMatrixs);
+    this.smartCanvas2.drawFloatMatrixs(floatMatrixs);
   }
 }
 
 // 目标分割
-RenderFrame1.prototype.floatMatrixsMask = function (floatMatrixs, box) {
-  if (typeof floatMatrixs.data !== 'undefined') {
-    this.smartCanvas1.drawFloatMask(floatMatrixs);
+RenderFrame1.prototype.floatMatrixsMask = function (floatMatrixs) {
+  // console.log(111, floatMatrixs) //  && this.openCVLoad
+  if (typeof floatMatrixs.points !== 'undefined') {
+    // let data = updateDAta(floatMatrixs)
+
+    // this.smartCanvas2.drawFloatMask(floatMatrixs);
+
+    // const maskX = floatMatrixs.floatWH.p1.x;
+    // const maskY = floatMatrixs.floatWH.p1.y;
+    let color = `rgba(0, 255, 25, 0.5)`;
+    // let segmentPoints = updateData(floatMatrixs)
+    this.smartCanvas2.drawSegmentBorder(floatMatrixs.points, color) //, maskX, maskY
+
+    // let img = cv.imread(this.imgMain)
+    // for(let i = 1; i < data.length; i++) {
+    //   console.log(data[i])
+    //   cv.line(img, data[i].p1, data[i-1].p1, [0,255, 50, 155], 1, 8, 6 )
+    // }
+    // cv.imshow('canvas-2', img);
   }
-  // if (typeof floatMatrixs.data !== 'undefined') {
-  //   const maskX = box.p1.x;
-  //   const maskY = box.p1.y;
-  //   let color = `rgba(${this.colors[0]})`;
-  //   const segmentPoints = body.segmentPoints;
-  //   this.smartCanvas.drawSegmentBorder(segmentPoints, maskX, maskY, color);
-  // }
 }

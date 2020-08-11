@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include "CNNMethod/PostPredictor/PostPredictor.h"
+#include "CNNMethod/CNNConst.h"
 
 namespace xstream {
 class ActPostPredictor : public PostPredictor {
@@ -23,13 +24,16 @@ class ActPostPredictor : public PostPredictor {
 
  private:
   std::vector<BaseDataPtr> TargetPro(
-      const std::vector<std::vector<int8_t>> &mxnet_outs);
+      const std::vector<std::vector<int8_t>> &mxnet_outs,
+      int dim_idx, int dim_size);
 
   std::vector<BaseDataPtr> DefaultVaule(int size);
   std::string groups_str_;
   int target_group_;
   std::vector<std::vector<int>> merge_groups_;
   float threshold_;
+  LmkSeqOutputType output_type_;
+  int en_dump_feature_;
 };
 }  // namespace xstream
 
